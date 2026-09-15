@@ -7,7 +7,7 @@
 ## Главные файлы
 
 - [DEVICE.md](DEVICE.md) — проверенные характеристики нашего экземпляра.
-- [CREDS.md](CREDS.md) — данные доступа и восстановление Telnet.
+- [CREDENTIALS.md](CREDENTIALS.md) — данные доступа и восстановление Telnet.
 - [TONY.md](TONY.md) — внешняя статья о похожем устройстве.
 
 ## Быстрый старт
@@ -18,18 +18,18 @@
 D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-wifi.bat
 ```
 
-Данные входа см. в `CREDS.md`.
+Данные входа см. в `CREDENTIALS.md`.
 
 Для команд через Telnet без передачи пароля в чат используется локальный config-файл:
 
 ```text
-agent\endoscope-telnet.local.ps1
+scripts\endoscope-telnet.local.ps1
 ```
 
 Запуск одной команды через Telnet:
 
 ```powershell
-D:\PROJECTS\ENDOSCOPE\agent\run-endoscope-telnet-command.bat "cat /proc/cpuinfo"
+D:\PROJECTS\ENDOSCOPE\scripts\run-endoscope-telnet-command.bat "cat /proc/cpuinfo"
 ```
 
 ### Подключение напрямую через UART
@@ -49,13 +49,12 @@ D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-uart.bat COM4
 ```text
 README.md                  краткий указатель по проекту
 DEVICE.md                  характеристики нашего экземпляра
-CREDS.md             данные доступа и восстановление Telnet
+CREDENTIALS.md             данные доступа и восстановление Telnet
 TONY.md                    отдельные заметки по внешней статье
 images\                    фотографии платы
 logs\                      UART boot logs и shell output
 hashcat\                   hashcat input, potfile, найденный пароль и BAT-файлы
-scripts\                   BAT-файлы ручного подключения
-agent\                    локальные файлы для Telnet-команд агента
+scripts\                   BAT-файлы подключения
 tools\                     локальные утилиты, например portable PuTTY
 _backup\                   backup перед реорганизацией и правками
 ```
@@ -67,7 +66,7 @@ _backup\                   backup перед реорганизацией и п�
 - Hashcat-файлы и BAT-скрипты перебора перенесены в `hashcat\`.
 - Активные скрипты подключения оставлены в `scripts\`.
 - Данные нашего устройства отделены от сведений из внешней статьи.
-- Секретные значения вынесены из README в `CREDS.md`.
+- Секретные значения вынесены из README в `CREDENTIALS.md`.
 
 ## Текущий статус
 
@@ -86,7 +85,5 @@ _backup\                   backup перед реорганизацией и п�
 4. Понять механизм сохранения настроек во flash.
 5. Проверить, какие изменения можно безопасно делать в RAM, а какие требуют прошивки.
 6. После новых экспериментов обновлять `DEVICE.md`, а не раздувать README.
-
-
 
 

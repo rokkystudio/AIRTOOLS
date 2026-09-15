@@ -1,0 +1,1 @@
+﻿echo __BEGIN__; cat /proc/mtd; echo __END__

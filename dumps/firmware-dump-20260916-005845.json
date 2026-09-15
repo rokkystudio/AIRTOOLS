@@ -1,0 +1,43 @@
+﻿{
+    "timestamp":  "2026-09-16T00:58:45.6953190+03:00",
+    "method":  "Wi-Fi Telnet + TCP raw /dev/mtd0",
+    "full_dump":  {
+                      "path":  "D:\\PROJECTS\\ENDOSCOPE\\dumps\\flash_full_mtd0.bin",
+                      "bytes":  4194304,
+                      "sha256":  "C11AD67DE1A32884BE18A00655CAA75FE0CB883520F1F422A629009DA72E3967"
+                  },
+    "parts":  [
+                  {
+                      "path":  "D:\\PROJECTS\\ENDOSCOPE\\dumps\\mtd1_bootloader.bin",
+                      "offset":  "0x000000",
+                      "offset_bytes":  0,
+                      "size":  "0x030000",
+                      "bytes":  196608,
+                      "sha256":  "9012C77628E5A7724D7FEA2641399978089445CFC655671EE872741725CA31B6"
+                  },
+                  {
+                      "path":  "D:\\PROJECTS\\ENDOSCOPE\\dumps\\mtd2_config.bin",
+                      "offset":  "0x030000",
+                      "offset_bytes":  196608,
+                      "size":  "0x010000",
+                      "bytes":  65536,
+                      "sha256":  "19F1E55B1DC8E23DFC9DC94A5343EA05EC6352464F7BFF99C76ADBF9EA78E607"
+                  },
+                  {
+                      "path":  "D:\\PROJECTS\\ENDOSCOPE\\dumps\\mtd3_factory.bin",
+                      "offset":  "0x040000",
+                      "offset_bytes":  262144,
+                      "size":  "0x010000",
+                      "bytes":  65536,
+                      "sha256":  "62755F6E645C3C0F7D20BD348D11AC7668A2C2254DE4AA325298EA808F86B0CD"
+                  },
+                  {
+                      "path":  "D:\\PROJECTS\\ENDOSCOPE\\dumps\\mtd4_kernel.bin",
+                      "offset":  "0x050000",
+                      "offset_bytes":  327680,
+                      "size":  "0x3B0000",
+                      "bytes":  3866624,
+                      "sha256":  "72904FD990D724D81CF2EBD3C1E812954C55422442D16CAB7C0E152FF3610C2D"
+                  }
+              ]
+}

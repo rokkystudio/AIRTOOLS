@@ -23,4 +23,3 @@ https://n8henrie.com/2019/02/reverse-engineering-my-wifi-endoscope-part-2/
 - UART `57600`;
 - пример чужих данных входа из статьи.
 
-

@@ -1,0 +1,3 @@
+﻿2026-09-16 00:39:22 Checking /proc/mtd over Wi-Fi/Telnet
+2026-09-16 00:39:24 Starting one-shot TCP sender for /dev/mtd0 on the endoscope
+2026-09-16 00:39:26 Connecting to 192.168.10.123:9000 and receiving flash bytes

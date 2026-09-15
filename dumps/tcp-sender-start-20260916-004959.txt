@@ -1,0 +1,6 @@
+﻿printf '\137\137BEGIN\137\137\012'; tcpsvd -c 1 0.0.0.0 9000 cat /dev/mtd0 2>/
+tmp/mtd0-dump.err & printf '\137\137DUMP_SERVER_STARTED\137\137\012'; printf '\1
+37\137END\137\137\012'
+__BEGIN__
+__DUMP_SERVER_STARTED__
+__END__

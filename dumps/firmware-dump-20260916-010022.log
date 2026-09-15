@@ -1,0 +1,10 @@
+﻿2026-09-16 01:00:22 Running read-only Telnet diagnostics
+2026-09-16 01:00:32 Starting foreground TCP sender for /dev/mtd0 while keeping Telnet open
+2026-09-16 01:00:33 Connecting to 192.168.10.123:9000 and receiving flash bytes
+2026-09-16 01:00:33 Received 1056768 bytes
+2026-09-16 01:00:34 Received 2097152 bytes
+2026-09-16 01:00:35 Received 3145728 bytes
+2026-09-16 01:00:35 Received 4194304 bytes
+2026-09-16 01:00:36 Received total 4194304 bytes
+2026-09-16 01:00:36 SHA256 flash_full_mtd0.bin C11AD67DE1A32884BE18A00655CAA75FE0CB883520F1F422A629009DA72E3967
+2026-09-16 01:00:36 Metadata D:\PROJECTS\ENDOSCOPE\dumps\firmware-dump-20260916-010022.json
