@@ -1,0 +1,529 @@
+﻿
+# 
+--- COMMAND: cat /proc/version ---
+cat /proc/version
+Linux version 2.6.36 (tony@ubuntu) (gcc version 4.6.3 (Buildroot 2012.11.1) ) #772 Mon Mar 11 17:01:13 CST 2019
+# 
+--- COMMAND: cat /proc/cmdline ---
+cat /proc/cmdline
+console=ttyS1,57600n8 root=/dev/ram0 console=ttyS0
+# 
+--- COMMAND: cat /proc/meminfo ---
+cat /proc/meminfo
+MemTotal:          60504 kB
+MemFree:           46400 kB
+Buffers:               0 kB
+Cached:             6264 kB
+SwapCached:            0 kB
+Active:             3916 kB
+Inactive:           2920 kB
+Active(anon):        572 kB
+Inactive(anon):        0 kB
+Active(file):       3344 kB
+Inactive(file):     2920 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:           584 kB
+Mapped:              656 kB
+Shmem:                 0 kB
+Slab:               3516 kB
+SReclaimable:        692 kB
+SUnreclaim:         2824 kB
+KernelStack:         296 kB
+PageTables:          124 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:       30252 kB
+Committed_AS:       2236 kB
+VmallocTotal:    1048372 kB
+VmallocUsed:        3352 kB
+VmallocChunk:    1041036 kB
+# 
+--- COMMAND: cat /proc/partitions ---
+cat /proc/partitions
+major minor  #blocks  name
+
+  31        0       4096 mtdblock0
+  31        1        192 mtdblock1
+  31        2         64 mtdblock2
+  31        3         64 mtdblock3
+  31        4       3776 mtdblock4
+# 
+--- COMMAND: ls -la / ---
+ls -la /
+drwxrwxr-x    2         0 Mar 11  2019 bin
+drwxr-xr-x    3         0 Jan  1 00:00 dev
+drwxrwxr-x    2         0 Mar 11  2019 sbin
+drwxr-xr-x    2         0 Jan  1 00:00 media
+drwxrwxr-x    2         0 Mar 11  2019 home
+dr-xr-xr-x   47         0 Jan  1 00:00 proc
+drwxrwxr-x    6         0 Mar 11  2019 usr
+drwxr-xr-x   11         0 Jan  1 00:00 sys
+drwxr-xr-x    3         0 Jan  1 00:00 etc
+drwxr-xr-x    5         0 Jan  1 00:00 var
+drwxrwxr-x    3         0 Mar 11  2019 mnt
+lrwxrwxrwx    1        11 Mar 11  2019 init -> bin/busybox
+drwxr-xr-x    4         0 Mar 11  2019 lib
+drwxr-xr-x    2         0 Jan  1 00:00 tmp
+drwxrwxr-x   10         0 Jan  1 00:00 etc_ro
+drwxr-xr-x   16         0 Jan  1 00:00 ..
+drwxr-xr-x   16         0 Jan  1 00:00 .
+# 
+--- COMMAND: ls -la /bin ---
+ls -la /bin
+lrwxrwxrwx    1         7 Mar 11  2019 rm -> busybox
+-rwxrwxr-x    1     42104 Mar 11  2019 iwpriv
+-rwxr-xr-x    1    418768 Mar 11  2019 busybox
+-rwxrwxr-x    1     36800 Mar 11  2019 ralink_init
+-rwxrwxr-x    1     25084 Feb 25  2019 udevt
+lrwxrwxrwx    1         7 Mar 11  2019 ping -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 hostname -> busybox
+-rwxrwxr-x    1      6376 Mar 11  2019 nvram_daemon
+lrwxrwxrwx    1         7 Mar 11  2019 sync -> busybox
+-rwxrwxr-x    1     47984 Mar 11  2019 iwlist
+-rwxrwxr-x    1     56526 Feb 25  2019 app_mkfs
+lrwxrwxrwx    1         7 Mar 11  2019 vi -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 date -> busybox
+lrwxrwxrwx    1        11 Mar 11  2019 nvram_get -> ralink_init
+lrwxrwxrwx    1         7 Mar 11  2019 touch -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 mknod -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 chmod -> busybox
+-rwxrwxr-x    1    163450 Mar 11  2019 app_cam
+lrwxrwxrwx    1         7 Mar 11  2019 mv -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 ping6 -> busybox
+-rwxrwxr-x    1     51368 Mar 11  2019 lsusb
+lrwxrwxrwx    1         7 Mar 11  2019 dmesg -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 mkdir -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 ash -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 ps -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 fsync -> busybox
+-rwxrwxr-x    1     13140 Mar 11  2019 mtd_write
+lrwxrwxrwx    1         7 Mar 11  2019 sed -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 ls -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 mount -> busybox
+lrwxrwxrwx    1        11 Mar 11  2019 nvram_set -> ralink_init
+-rwxrwxr-x    1     15628 Mar 11  2019 ated
+-rwxrwxr-x    1     14872 Mar 11  2019 switch
+lrwxrwxrwx    1         7 Mar 11  2019 fatattr -> busybox
+-rwxrwxr-x    1     14300 Mar 11  2019 flash
+lrwxrwxrwx    1         7 Mar 11  2019 cp -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 pwd -> busybox
+-rwxrwxr-x    1      5620 Mar 11  2019 mii_mgr
+-rwxrwxr-x    1     48196 Feb 25  2019 app_host
+-rwxrwxr-x    1      9584 Mar 11  2019 phyval
+lrwxrwxrwx    1         7 Mar 11  2019 kill -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 umount -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 grep -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 sleep -> busybox
+-rwxrwxr-x    1      5348 Mar 11  2019 mii_mgr_cl45
+lrwxrwxrwx    1         7 Mar 11  2019 ionice -> busybox
+-rwxrwxr-x    1    164756 Mar 11  2019 iperf
+lrwxrwxrwx    1         7 Mar 11  2019 cat -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 rev -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 echo -> busybox
+lrwxrwxrwx    1         7 Mar 11  2019 sh -> busybox
+-rwxrwxr-x    1      7372 Mar 11  2019 reg
+-rwxrwxr-x    1      9488 Mar 11  2019 gpio
+lrwxrwxrwx    1         7 Mar 11  2019 login -> busybox
+-rwxrwxr-x    1     47976 Mar 11  2019 iwconfig
+lrwxrwxrwx    1         7 Mar 11  2019 dnsdomainname -> busybox
+-rwxrwxr-x    1      7520 Feb 25  2019 app_detect
+drwxr-xr-x   16         0 Jan  1 00:00 ..
+drwxrwxr-x    2         0 Mar 11  2019 .
+# 
+--- COMMAND: ls -la /sbin ---
+ls -la /sbin
+lrwxrwxrwx    1        14 Mar 11  2019 modinfo -> ../bin/busybox
+-rwxr-xr-x    1     10797 Mar 11  2019 config.sh
+lrwxrwxrwx    1        14 Mar 11  2019 mdev -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 blkid -> ../bin/busybox
+-rwxr-xr-x    1      2567 Mar 11  2019 makedevlinks.sh
+lrwxrwxrwx    1        14 Mar 11  2019 rmmod -> ../bin/busybox
+-rwxr-xr-x    1      1370 Mar 11  2019 wifi_conn.sh
+lrwxrwxrwx    1        14 Mar 11  2019 tunctl -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 devmem -> ../bin/busybox
+-rwxr-xr-x    1       202 Mar 11  2019 run_app.sh
+lrwxrwxrwx    1        14 Mar 11  2019 ifconfig -> ../bin/busybox
+-rwxr-xr-x    1      1452 Mar 11  2019 video_ko.sh
+lrwxrwxrwx    1        14 Mar 11  2019 lsmod -> ../bin/busybox
+-rwxr-xr-x    1      1211 Mar 11  2019 config_save.sh
+-rwxr-xr-x    1       134 Mar 11  2019 sdcard_remove.sh
+lrwxrwxrwx    1        14 Mar 11  2019 blockdev -> ../bin/busybox
+-rwxr-xr-x    1     28630 Mar 11  2019 internet.sh
+-rwxr-xr-x    1      3505 Mar 11  2019 wifi_ap.sh
+lrwxrwxrwx    1        14 Mar 11  2019 vconfig -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 syslogd -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 insmod -> ../bin/busybox
+-rwxr-xr-x    1       470 Mar 11  2019 sdcard_insert.sh
+-rwxr-xr-x    1      4312 Mar 11  2019 lan.sh
+lrwxrwxrwx    1        14 Mar 11  2019 reboot -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 init -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 acpid -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 halt -> ../bin/busybox
+-rwxr-xr-x    1       340 Mar 11  2019 check_wifi.sh
+-rwxr-xr-x    1      2401 Mar 11  2019 global.sh
+lrwxrwxrwx    1        14 Mar 11  2019 fstrim -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 poweroff -> ../bin/busybox
+-rwxr-xr-x    1       367 Mar 11  2019 chpasswd.sh
+-rwxr-xr-x    1      5267 Mar 11  2019 config-udhcpd.sh
+-rwxr-xr-x    1      1847 Mar 11  2019 wifi_ap_internet.sh
+lrwxrwxrwx    1        14 Mar 11  2019 bootchartd -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 route -> ../bin/busybox
+lrwxrwxrwx    1        14 Mar 11  2019 udhcpc -> ../bin/busybox
+drwxr-xr-x   16         0 Jan  1 00:00 ..
+drwxrwxr-x    2         0 Mar 11  2019 .
+# 
+--- COMMAND: ls -la /etc ---
+ls -la /etc
+drwxr-xr-x    3         0 Jan  1 00:00 Wireless
+-rw-r--r--    1        18 Jan  1 00:00 group
+-rw-r--r--    1        35 Jan  1 00:00 passwd-
+-rw-r--r--    1        48 Jan  1 00:00 passwd
+drwxr-xr-x   16         0 Jan  1 00:00 ..
+drwxr-xr-x    3         0 Jan  1 00:00 .
+# 
+--- COMMAND: ls -la /etc_ro ---
+ls -la /etc_ro
+drwxrwxr-x    2         0 Mar 11  2019 web
+-rw-r--r--    1     24837 Mar 11  2019 fp_db
+drwxrwxr-x    5         0 Mar 11  2019 Wireless
+drwxrwxr-x    2         0 Mar 11  2019 wlan
+drwxrwxr-x    2         0 Mar 11  2019 lighttpd
+drwxrwxr-x    5         0 Mar 11  2019 ppp
+drwxrwxr-x    2         0 Mar 11  2019 linuxigd
+-rwxr-xr-x    1        82 Mar 11  2019 resolv.conf
+-rw-r--r--    1       105 Mar 11  2019 inittab
+drwxrwxr-x    2         0 Mar 11  2019 usb
+-rwxr-xr-x    1       841 Mar 11  2019 rcS
+-rw-r--r--    1        81 Mar 11  2019 motd
+drwxrwxr-x    2         0 Mar 11  2019 xml
+-rw-r--r--    1       189 Jan  1 00:00 udhcpd.conf
+drwxr-xr-x   16         0 Jan  1 00:00 ..
+drwxrwxr-x   10         0 Jan  1 00:00 .
+# 
+--- COMMAND: cat /etc/passwd ---
+cat /etc/passwd
+molink:GGyh/PXa6D1n6:0:0:Adminstrator:/:/bin/sh
+# 
+--- COMMAND: cat /etc/shadow ---
+cat /etc/shadow
+cat: can't open '/etc/shadow': No such file or directory
+# 
+--- COMMAND: cat /etc_ro/passwd ---
+cat /etc_ro/passwd
+cat: can't open '/etc_ro/passwd': No such file or directory
+# 
+--- COMMAND: cat /etc_ro/shadow ---
+cat /etc_ro/shadow
+cat: can't open '/etc_ro/shadow': No such file or directory
+# 
+--- COMMAND: cat /etc/inittab ---
+cat /etc/inittab
+cat: can't open '/etc/inittab': No such file or directory
+# 
+--- COMMAND: cat /etc_ro/inittab ---
+cat /etc_ro/inittab
+::sysinit:/etc_ro/rcS
+ttyS1::respawn:/bin/sh
+#ttyS1::respawn:/sbin/getty -L ttyS1 57600 # GENERIC_SERIAL
+# 
+--- COMMAND: cat /etc_ro/udhcpd.conf ---
+cat /etc_ro/udhcpd.conf
+start 192.168.10.20
+end 192.168.10.100
+interface ra1
+option subnet 255.255.255.0
+option dns 168.95.1.1 8.8.8.8
+option router 192.168.10.123
+option lease 86400
+lease_file /var/udhcpd.leases
+# 
+--- COMMAND: cat /etc_ro/Wireless/RT2860AP/RT2860AP.dat ---
+cat /etc_ro/Wireless/RT2860AP/RT2860AP.dat
+#The word of "Default" must not be removed
+Default
+CountryRegion=0
+CountryRegionABand=7
+CountryCode=
+BssidNum=1
+SSID1=MT7628_AP
+SSID2=
+SSID3=
+SSID4=
+SSID5=
+SSID6=
+SSID7=
+SSID8=
+WirelessMode=9
+FixedTxMode=HT
+TxRate=
+Channel=0
+BasicRate=15
+BeaconPeriod=100
+DtimPeriod=1
+TxPower=100
+DisableOLBC=0
+BGProtection=0
+TxAntenna=
+RxAntenna=
+TxPreamble=0
+RTSThreshold=2347
+FragThreshold=2346
+TxBurst=1
+PktAggregate=0
+AutoProvisionEn=0
+FreqDelta=0
+TurboRate=0
+WmmCapable=
+APAifsn=3;7;1;1
+APCwmin=4;4;3;2
+APCwmax=6;10;4;3
+APTxop=0;0;94;47
+APACM=0;0;0;0
+BSSAifsn=3;7;2;2
+BSSCwmin=4;4;3;2
+BSSCwmax=10;10;4;3
+BSSTxop=0;0;94;47
+BSSACM=0;0;0;0
+AckPolicy=0;0;0;0
+APSDCapable=0
+DLSCapable=0
+NoForwarding=0
+NoForwardingBTNBSSID=0
+HideSSID=0
+ShortSlot=1
+AutoChannelSelect=2
+IEEE8021X=0
+IEEE80211H=0
+CarrierDetect=0
+ITxBfEn=0
+PreAntSwitch=
+PhyRateLimit=0
+DebugFlags=0
+ETxBfEnCond=0
+ITxBfTimeout=0
+ETxBfTimeout=0
+ETxBfNoncompress=0
+ETxBfIncapable=0
+FineAGC=0
+StreamMode=0
+StreamModeMac0=
+StreamModeMac1=
+StreamModeMac2=
+StreamModeMac3=
+CSPeriod=6
+RDRegion=
+StationKeepAlive=0
+DfsLowerLimit=0
+DfsUpperLimit=0
+DfsOutdoor=0
+SymRoundFromCfg=0
+BusyIdleFromCfg=0
+DfsRssiHighFromCfg=0
+DfsRssiLowFromCfg=0
+DFSParamFromConfig=0
+FCCParamCh0=
+FCCParamCh1=
+FCCParamCh2=
+FCCParamCh3=
+CEParamCh0=
+CEParamCh1=
+CEParamCh2=
+CEParamCh3=
+JAPParamCh0=
+JAPParamCh1=
+JAPParamCh2=
+JAPParamCh3=
+JAPW53ParamCh0=
+JAPW53ParamCh1=
+JAPW53ParamCh2=
+JAPW53ParamCh3=
+FixDfsLimit=0
+LongPulseRadarTh=0
+AvgRssiReq=0
+DFS_R66=0
+BlockCh=
+GreenAP=0
+PreAuth=0
+AuthMode=OPEN
+EncrypType=NONE
+WapiPsk1=
+WapiPsk2=
+WapiPsk3=
+WapiPsk4=
+WapiPsk5=
+WapiPsk6=
+WapiPsk7=
+WapiPsk8=
+WapiPskType=
+Wapiifname=
+WapiAsCertPath=
+WapiUserCertPath=
+WapiAsIpAddr=
+WapiAsPort=
+BssidNum=1
+RekeyMethod=TIME
+RekeyInterval=3600
+PMKCachePeriod=10
+MeshAutoLink=0
+MeshAuthMode=
+MeshEncrypType=
+MeshDefaultkey=0
+MeshWEPKEY=
+MeshWPAKEY=
+MeshId=
+WPAPSK1=
+WPAPSK2=
+WPAPSK3=
+WPAPSK4=
+WPAPSK5=
+WPAPSK6=
+WPAPSK7=
+WPAPSK8=
+DefaultKeyID=2
+Key1Type=0
+Key1Str1=
+Key1Str2=
+Key1Str3=
+Key1Str4=
+Key1Str5=
+Key1Str6=
+Key1Str7=
+Key1Str8=
+Key2Type=0
+Key2Str1=
+Key2Str2=
+Key2Str3=
+Key2Str4=
+Key2Str5=
+Key2Str6=
+Key2Str7=
+Key2Str8=
+Key3Type=0
+Key3Str1=
+Key3Str2=
+Key3Str3=
+Key3Str4=
+Key3Str5=
+Key3Str6=
+Key3Str7=
+Key3Str8=
+Key4Type=0
+Key4Str1=
+Key4Str2=
+Key4Str3=
+Key4Str4=
+Key4Str5=
+Key4Str6=
+Key4Str7=
+Key4Str8=
+HSCounter=0
+HT_HTC=1
+HT_RDG=0
+HT_LinkAdapt=0
+HT_OpMode=0
+HT_MpduDensity=5
+HT_EXTCHA=1
+HT_BW=1
+HT_AutoBA=1
+HT_BADecline=0
+HT_AMSDU=0
+HT_BAWinSize=64
+HT_GI=1
+HT_STBC=1
+HT_MCS=33
+HT_TxStream=2
+HT_RxStream=2
+HT_PROTECT=1
+HT_DisallowTKIP=1
+HT_BSSCoexistence=0
+HT_LDPC=0
+GreenAP=0
+VHT_BW=0
+VHT_STBC=0
+VHT_SGI=0
+VHT_BW_SIGNAL=0
+VHT_LDPC=0
+WscConfMode=0
+WscConfStatus=2
+WCNTest=0
+AccessPolicy0=0
+AccessControlList0=
+AccessPolicy1=0
+AccessControlList1=
+AccessPolicy2=0
+AccessControlList2=
+AccessPolicy3=0
+AccessControlList3=
+AccessPolicy4=0
+AccessControlList4=
+AccessPolicy5=0
+AccessControlList5=
+AccessPolicy6=0
+AccessControlList6=
+AccessPolicy7=0
+AccessControlList7=
+WdsEnable=0
+WdsPhyMode=
+WdsEncrypType=NONE
+WdsList=
+Wds0Key=
+Wds1Key=
+Wds2Key=
+Wds3Key=
+RADIUS_Server=0
+RADIUS_Port=1812
+RADIUS_Key1=ralink
+RADIUS_Key2=
+RADIUS_Key3=
+RADIUS_Key4=
+RADIUS_Key5=
+RADIUS_Key6=
+RADIUS_Key7=
+RADIUS_Key8=
+RADIUS_Acct_Server=
+RADIUS_Acct_Port=1813
+RADIUS_Acct_Key=
+own_ip_addr=192.168.10.123
+Ethifname=
+EAPifname=br0
+PreAuthifname=br0
+session_timeout_interval=0
+idle_timeout_interval=0
+WiFiTest=0
+TGnWifiTest=0
+ApCliEnable=0
+ApCliSsid=
+ApCliBssid=
+ApCliAuthMode=
+ApCliEncrypType=
+ApCliWPAPSK=
+ApCliDefaultKeyID=0
+ApCliKey1Type=0
+ApCliKey1Str=
+ApCliKey2Type=0
+ApCliKey2Str=
+ApCliKey3Type=0
+ApCliKey3Str=
+ApCliKey4Type=0
+ApCliKey4Str=
+EfuseBufferMode=0
+E2pAccessMode=0
+RadioOn=1
+BW_Enable=0
+BW_Root=0
+BW_Priority=
+BW_Guarantee_Rate=
+BW_Maximum_Rate=
+SSID=
+WPAPSK=
+Key1Str=
+Key2Str=
+Key3Str=
+Key4Str=
+# 

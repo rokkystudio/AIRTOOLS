@@ -1,0 +1,30 @@
+﻿
+# 
+--- COMMAND: echo __ACCOUNTS_BEGIN__ ---
+echo __ACCOUNTS_BEGIN__
+__ACCOUNTS_BEGIN__
+# 
+--- COMMAND: for f in /etc/passwd /etc_ro/passwd; do echo FILE:$f; if test -f $f; then awk -F: '{ p=$2; if (p=="") t="EMPTY"; else if (p=="x") t="SHADOW"; else if (p=="*") t="LOCKED"; else if (p=="!") t="LOCKED"; else t="HASH"; print $1 ":uid=" $3 ":gid=" $4 ":home=" $6 ":shell=" $7 ":pass=" t }' $f; else echo MISSING; fi; done ---
+for f in /etc/passwd /etc_ro/passwd; do echo FILE:$f; if test -f $f; then awk 
+-F: '{ p=$2; if (p=="") t="EMPTY"; else if (p=="x") t="SHADOW"; else if (p=="*")
+ t="LOCKED"; else if (p=="!") t="LOCKED"; else t="HASH"; print $1 ":uid=" $3 ":g
+id=" $4 ":home=" $6 ":shell=" $7 ":pass=" t }' $f; else echo MISSING; fi; done
+FILE:/etc/passwd
+/bin/sh: awk: not found
+FILE:/etc_ro/passwd
+MISSING
+# 
+--- COMMAND: for f in /etc/shadow /etc_ro/shadow; do echo FILE:$f; if test -f $f; then awk -F: '{ p=$2; if (p=="") t="EMPTY"; else if (p=="*") t="LOCKED"; else if (p=="!") t="LOCKED"; else t="HASH"; print $1 ":shadow=" t }' $f; else echo MISSING; fi; done ---
+for f in /etc/shadow /etc_ro/shadow; do echo FILE:$f; if test -f $f; then awk 
+-F: '{ p=$2; if (p=="") t="EMPTY"; else if (p=="*") t="LOCKED"; else if (p=="!")
+ t="LOCKED"; else t="HASH"; print $1 ":shadow=" t }' $f; else echo MISSING; fi; 
+done
+FILE:/etc/shadow
+MISSING
+FILE:/etc_ro/shadow
+MISSING
+# 
+--- COMMAND: echo __ACCOUNTS_END__ ---
+echo __ACCOUNTS_END__
+__ACCOUNTS_END__
+# 

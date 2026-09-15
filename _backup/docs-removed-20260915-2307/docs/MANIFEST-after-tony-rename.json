@@ -1,0 +1,437 @@
+﻿[
+    {
+        "RelativePath":  ".idea\\.gitignore",
+        "Bytes":  345,
+        "LastWriteTime":  "2026-09-15 20:20:20"
+    },
+    {
+        "RelativePath":  ".idea\\indexLayout.xml",
+        "Bytes":  205,
+        "LastWriteTime":  "2026-09-15 20:20:15"
+    },
+    {
+        "RelativePath":  ".idea\\projectSettingsUpdater.xml",
+        "Bytes":  308,
+        "LastWriteTime":  "2026-09-15 20:20:15"
+    },
+    {
+        "RelativePath":  ".idea\\workspace.xml",
+        "Bytes":  126,
+        "LastWriteTime":  "2026-09-15 20:20:14"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\.idea\\.gitignore",
+        "Bytes":  345,
+        "LastWriteTime":  "2026-09-15 20:20:20"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\.idea\\indexLayout.xml",
+        "Bytes":  205,
+        "LastWriteTime":  "2026-09-15 20:20:15"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\.idea\\projectSettingsUpdater.xml",
+        "Bytes":  308,
+        "LastWriteTime":  "2026-09-15 20:20:15"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\.idea\\workspace.xml",
+        "Bytes":  126,
+        "LastWriteTime":  "2026-09-15 20:20:14"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\1789487224941.jpg",
+        "Bytes":  3130035,
+        "LastWriteTime":  "2026-09-15 18:47:17"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\1789487224948.jpg",
+        "Bytes":  2576137,
+        "LastWriteTime":  "2026-09-15 18:47:18"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\1789489367549.jpg",
+        "Bytes":  3246771,
+        "LastWriteTime":  "2026-09-15 19:22:54"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\accounts-sanitized-20260915-201543.txt",
+        "Bytes":  1499,
+        "LastWriteTime":  "2026-09-15 20:15:53"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\hash.txt",
+        "Bytes":  13,
+        "LastWriteTime":  "2026-09-15 20:45:21"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\hashcat-endoscope.potfile",
+        "Bytes":  24,
+        "LastWriteTime":  "2026-09-15 20:59:04"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\hashcat-found.txt",
+        "Bytes":  10,
+        "LastWriteTime":  "2026-09-15 20:59:04"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\README.md",
+        "Bytes":  13011,
+        "LastWriteTime":  "2026-09-15 21:07:51"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\uart_57600_capture.bin",
+        "Bytes":  0,
+        "LastWriteTime":  "2026-09-15 19:45:20"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\uart_57600_capture.txt",
+        "Bytes":  1818,
+        "LastWriteTime":  "2026-09-15 19:45:54"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\uart-20260915-200900-57600.bin",
+        "Bytes":  8232,
+        "LastWriteTime":  "2026-09-15 20:10:31"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\uart-20260915-200900-57600.txt",
+        "Bytes":  8237,
+        "LastWriteTime":  "2026-09-15 20:10:31"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\uart-readonly-20260915-201154.txt",
+        "Bytes":  14230,
+        "LastWriteTime":  "2026-09-15 20:12:40"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211524-before-reorg\\uart-shell-20260915-201108.txt",
+        "Bytes":  4427,
+        "LastWriteTime":  "2026-09-15 20:11:30"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\.idea\\.gitignore",
+        "Bytes":  345,
+        "LastWriteTime":  "2026-09-15 20:20:20"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\.idea\\indexLayout.xml",
+        "Bytes":  205,
+        "LastWriteTime":  "2026-09-15 20:20:15"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\.idea\\projectSettingsUpdater.xml",
+        "Bytes":  308,
+        "LastWriteTime":  "2026-09-15 20:20:15"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\.idea\\workspace.xml",
+        "Bytes":  126,
+        "LastWriteTime":  "2026-09-15 20:20:14"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\hashcat\\hash.txt",
+        "Bytes":  13,
+        "LastWriteTime":  "2026-09-15 20:45:21"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\hashcat\\hashcat-endoscope.potfile",
+        "Bytes":  24,
+        "LastWriteTime":  "2026-09-15 20:59:04"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\hashcat\\hashcat-found.txt",
+        "Bytes":  10,
+        "LastWriteTime":  "2026-09-15 20:59:04"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\hashcat\\run-len1-6.bat",
+        "Bytes":  583,
+        "LastWriteTime":  "2026-09-15 21:15:25"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\hashcat\\run-len7.bat",
+        "Bytes":  532,
+        "LastWriteTime":  "2026-09-15 21:15:25"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\hashcat\\run-len8.bat",
+        "Bytes":  534,
+        "LastWriteTime":  "2026-09-15 21:15:25"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\hashcat\\show-result.bat",
+        "Bytes":  535,
+        "LastWriteTime":  "2026-09-15 21:15:25"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\images\\1789487224941.jpg",
+        "Bytes":  3130035,
+        "LastWriteTime":  "2026-09-15 18:47:17"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\images\\1789487224948.jpg",
+        "Bytes":  2576137,
+        "LastWriteTime":  "2026-09-15 18:47:18"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\images\\1789489367549.jpg",
+        "Bytes":  3246771,
+        "LastWriteTime":  "2026-09-15 19:22:54"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\logs\\accounts-sanitized-20260915-201543.txt",
+        "Bytes":  1499,
+        "LastWriteTime":  "2026-09-15 20:15:53"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\logs\\uart_57600_capture.bin",
+        "Bytes":  0,
+        "LastWriteTime":  "2026-09-15 19:45:20"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\logs\\uart_57600_capture.txt",
+        "Bytes":  1818,
+        "LastWriteTime":  "2026-09-15 19:45:54"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\logs\\uart-20260915-200900-57600.bin",
+        "Bytes":  8232,
+        "LastWriteTime":  "2026-09-15 20:10:31"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\logs\\uart-20260915-200900-57600.txt",
+        "Bytes":  8237,
+        "LastWriteTime":  "2026-09-15 20:10:31"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\logs\\uart-readonly-20260915-201154.txt",
+        "Bytes":  14230,
+        "LastWriteTime":  "2026-09-15 20:12:40"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\logs\\uart-shell-20260915-201108.txt",
+        "Bytes":  4427,
+        "LastWriteTime":  "2026-09-15 20:11:30"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\README.md",
+        "Bytes":  13011,
+        "LastWriteTime":  "2026-09-15 21:07:51"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\scripts\\connect-endoscope.bat",
+        "Bytes":  1117,
+        "LastWriteTime":  "2026-09-15 21:15:25"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-211808-before-reorg\\scripts\\connect-endoscope-shell2323.bat",
+        "Bytes":  50,
+        "LastWriteTime":  "2026-09-15 21:15:25"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-212914-removed-temp-helper\\connect-endoscope-shell2323.bat",
+        "Bytes":  50,
+        "LastWriteTime":  "2026-09-15 21:25:54"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-212914-removed-temp-helper\\temporary-wifi-shell.md",
+        "Bytes":  177,
+        "LastWriteTime":  "2026-09-15 21:19:14"
+    },
+    {
+        "RelativePath":  "_backup\\20260915-212939-wifi-script-rename\\connect-endoscope.bat",
+        "Bytes":  1093,
+        "LastWriteTime":  "2026-09-15 21:24:35"
+    },
+    {
+        "RelativePath":  "_backup\\CREDENTIALS-before-split-20260915-224600.md",
+        "Bytes":  9593,
+        "LastWriteTime":  "2026-09-15 22:38:25"
+    },
+    {
+        "RelativePath":  "_backup\\README-before-cleanup-20260915-221045.md",
+        "Bytes":  13011,
+        "LastWriteTime":  "2026-09-15 21:07:51"
+    },
+    {
+        "RelativePath":  "_backup\\README-before-terminal-access-rewrite-20260915-222859.md",
+        "Bytes":  8875,
+        "LastWriteTime":  "2026-09-15 22:22:33"
+    },
+    {
+        "RelativePath":  "_backup\\rename-external-to-tony-20260915-225631\\EXTERNAL_ARTICLE.md",
+        "Bytes":  2167,
+        "LastWriteTime":  "2026-09-15 22:55:05"
+    },
+    {
+        "RelativePath":  "_backup\\rename-external-to-tony-20260915-225631\\README.md",
+        "Bytes":  4565,
+        "LastWriteTime":  "2026-09-15 22:55:05"
+    },
+    {
+        "RelativePath":  "_backup\\split-docs-20260915-225505\\CREDENTIALS.md",
+        "Bytes":  2328,
+        "LastWriteTime":  "2026-09-15 22:49:50"
+    },
+    {
+        "RelativePath":  "_backup\\split-docs-20260915-225505\\README.md",
+        "Bytes":  9978,
+        "LastWriteTime":  "2026-09-15 22:46:00"
+    },
+    {
+        "RelativePath":  "CREDENTIALS.md",
+        "Bytes":  3265,
+        "LastWriteTime":  "2026-09-15 22:55:05"
+    },
+    {
+        "RelativePath":  "DEVICE.md",
+        "Bytes":  4772,
+        "LastWriteTime":  "2026-09-15 22:55:05"
+    },
+    {
+        "RelativePath":  "docs\\MANIFEST-after-credentials-split.json",
+        "Bytes":  13478,
+        "LastWriteTime":  "2026-09-15 22:46:00"
+    },
+    {
+        "RelativePath":  "docs\\MANIFEST-after-doc-split.json",
+        "Bytes":  14106,
+        "LastWriteTime":  "2026-09-15 22:55:05"
+    },
+    {
+        "RelativePath":  "docs\\MANIFEST-after-readme-cleanup.json",
+        "Bytes":  12822,
+        "LastWriteTime":  "2026-09-15 22:22:40"
+    },
+    {
+        "RelativePath":  "docs\\MANIFEST-after-readme-terminal-access.json",
+        "Bytes":  13007,
+        "LastWriteTime":  "2026-09-15 22:28:59"
+    },
+    {
+        "RelativePath":  "docs\\MANIFEST-after-reorg.json",
+        "Bytes":  12371,
+        "LastWriteTime":  "2026-09-15 21:30:04"
+    },
+    {
+        "RelativePath":  "docs\\PROJECT_LAYOUT.md",
+        "Bytes":  416,
+        "LastWriteTime":  "2026-09-15 21:18:56"
+    },
+    {
+        "RelativePath":  "docs\\README_CLEANUP_TASK.md",
+        "Bytes":  10347,
+        "LastWriteTime":  "2026-09-15 21:42:30"
+    },
+    {
+        "RelativePath":  "docs\\README_REWRITE_TASK.md",
+        "Bytes":  2197,
+        "LastWriteTime":  "2026-09-15 21:19:06"
+    },
+    {
+        "RelativePath":  "hashcat\\hash.txt",
+        "Bytes":  13,
+        "LastWriteTime":  "2026-09-15 20:45:21"
+    },
+    {
+        "RelativePath":  "hashcat\\hashcat-endoscope.potfile",
+        "Bytes":  24,
+        "LastWriteTime":  "2026-09-15 20:59:04"
+    },
+    {
+        "RelativePath":  "hashcat\\hashcat-found.txt",
+        "Bytes":  10,
+        "LastWriteTime":  "2026-09-15 20:59:04"
+    },
+    {
+        "RelativePath":  "hashcat\\run-len1-6.bat",
+        "Bytes":  583,
+        "LastWriteTime":  "2026-09-15 21:27:38"
+    },
+    {
+        "RelativePath":  "hashcat\\run-len7.bat",
+        "Bytes":  532,
+        "LastWriteTime":  "2026-09-15 21:27:38"
+    },
+    {
+        "RelativePath":  "hashcat\\run-len8.bat",
+        "Bytes":  534,
+        "LastWriteTime":  "2026-09-15 21:27:39"
+    },
+    {
+        "RelativePath":  "hashcat\\show-result.bat",
+        "Bytes":  523,
+        "LastWriteTime":  "2026-09-15 21:27:39"
+    },
+    {
+        "RelativePath":  "images\\1789487224941.jpg",
+        "Bytes":  622694,
+        "LastWriteTime":  "2026-09-15 21:35:18"
+    },
+    {
+        "RelativePath":  "images\\1789487224948.jpg",
+        "Bytes":  541034,
+        "LastWriteTime":  "2026-09-15 21:37:34"
+    },
+    {
+        "RelativePath":  "images\\1789489367549.jpg",
+        "Bytes":  754427,
+        "LastWriteTime":  "2026-09-15 21:38:44"
+    },
+    {
+        "RelativePath":  "logs\\accounts-sanitized-20260915-201543.txt",
+        "Bytes":  1499,
+        "LastWriteTime":  "2026-09-15 20:15:53"
+    },
+    {
+        "RelativePath":  "logs\\uart_57600_capture.bin",
+        "Bytes":  0,
+        "LastWriteTime":  "2026-09-15 19:45:20"
+    },
+    {
+        "RelativePath":  "logs\\uart_57600_capture.txt",
+        "Bytes":  1818,
+        "LastWriteTime":  "2026-09-15 19:45:54"
+    },
+    {
+        "RelativePath":  "logs\\uart-20260915-200900-57600.bin",
+        "Bytes":  8232,
+        "LastWriteTime":  "2026-09-15 20:10:31"
+    },
+    {
+        "RelativePath":  "logs\\uart-20260915-200900-57600.txt",
+        "Bytes":  8237,
+        "LastWriteTime":  "2026-09-15 20:10:31"
+    },
+    {
+        "RelativePath":  "logs\\uart-readonly-20260915-201154.txt",
+        "Bytes":  14230,
+        "LastWriteTime":  "2026-09-15 20:12:40"
+    },
+    {
+        "RelativePath":  "logs\\uart-shell-20260915-201108.txt",
+        "Bytes":  4427,
+        "LastWriteTime":  "2026-09-15 20:11:30"
+    },
+    {
+        "RelativePath":  "README.md",
+        "Bytes":  4543,
+        "LastWriteTime":  "2026-09-15 22:56:31"
+    },
+    {
+        "RelativePath":  "scripts\\connect-endoscope-uart.bat",
+        "Bytes":  430,
+        "LastWriteTime":  "2026-09-15 21:29:29"
+    },
+    {
+        "RelativePath":  "scripts\\connect-endoscope-wifi.bat",
+        "Bytes":  1093,
+        "LastWriteTime":  "2026-09-15 21:24:35"
+    },
+    {
+        "RelativePath":  "TONY.md",
+        "Bytes":  2176,
+        "LastWriteTime":  "2026-09-15 22:56:31"
+    }
+]
