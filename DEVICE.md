@@ -1,6 +1,6 @@
 ﻿# ENDOSCOPE: характеристики нашего устройства
 
-Этот файл содержит только то, что было получено на нашем экземпляре через фото, UART, Windows/USB/Wi-Fi проверки и локальные логи проекта.
+Этот файл содержит только то, что было получено на нашем экземпляре через фото, UART, Windows/USB/Wi-Fi проверки и сохранённый дамп flash.
 
 ## Источники внутри проекта
 
@@ -15,15 +15,9 @@
   <a href="images/1789487224941.jpg"><img src="images/1789487224941.jpg" alt="1789487224941.jpg" width="240"></a>
 </p>
 
-### Логи
+### Системная информация
 
-- [UART boot log, text](logs/uart-20260915-200900-57600.txt)
-- [UART boot log, raw bin](logs/uart-20260915-200900-57600.bin)
-- [UART shell commands](logs/uart-shell-20260915-201108.txt)
-- [UART readonly command output](logs/uart-readonly-20260915-201154.txt)
-- [UART capture, text](logs/uart_57600_capture.txt)
-- [UART capture, raw bin](logs/uart_57600_capture.bin)
-- [Accounts, sanitized](logs/accounts-sanitized-20260915-201543.txt)
+- [Linux system inventory](SYSTEM.md)
 
 ## Плата
 
@@ -98,22 +92,13 @@ ARP подтвердил устройство по адресу `192.168.10.123`
 
 ```text
 23/tcp   open    Telnet, banner: MoLink login:
-7060/tcp open    нестандартный сервис, вероятно video/app service
+7060/tcp open    app_cam video stream server
 22/tcp   closed  SSH недоступен
 ```
 
-## Boot log
+## Boot / UART
 
-Основной boot log:
-
-```text
-[logs/uart-20260915-200900-57600.txt](logs/uart-20260915-200900-57600.txt)
-[logs/uart-20260915-200900-57600.bin](logs/uart-20260915-200900-57600.bin)
-```
-
-Файл `uart-20260915-200900-57600.bin` — это бинарный UART-захват, а не дамп flash. Такие файлы остаются в `logs\`.
-
-Из boot log нашего устройства:
+Из UART boot output нашего устройства:
 
 ```text
 U-Boot 1.1.3 (Aug  9 2018 - 17:34:36)
@@ -135,13 +120,6 @@ starting pid 249, tty '/dev/ttyS1': '/bin/sh'
 UART даёт shell без штатного Telnet-входа.
 
 ## Linux
-
-Команды shell сохранены здесь:
-
-```text
-[logs/uart-shell-20260915-201108.txt](logs/uart-shell-20260915-201108.txt)
-[logs/uart-readonly-20260915-201154.txt](logs/uart-readonly-20260915-201154.txt)
-```
 
 CPU из `/proc/cpuinfo`:
 
@@ -207,13 +185,11 @@ none on /sys type sysfs (rw,relatime)
 - [Config, mtd2](dumps/mtd2_config.bin) — offset `0x030000`, size `0x010000`, SHA256 `19F1E55B1DC8E23DFC9DC94A5343EA05EC6352464F7BFF99C76ADBF9EA78E607`
 - [Factory, mtd3](dumps/mtd3_factory.bin) — offset `0x040000`, size `0x010000`, SHA256 `62755F6E645C3C0F7D20BD348D11AC7668A2C2254DE4AA325298EA808F86B0CD`
 - [Kernel, mtd4](dumps/mtd4_kernel.bin) — offset `0x050000`, size `0x3B0000`, SHA256 `72904FD990D724D81CF2EBD3C1E812954C55422442D16CAB7C0E152FF3610C2D`
-- [Metadata](dumps/firmware-dump-20260916-010022.json)
 
-Файлы `*.bin` в `logs\` относятся к UART-захватам. Каталог `dumps\` содержит реальные дампы flash и выделенные из полного образа MTD-разделы.
+Каталог `dumps\` содержит полный дамп flash и выделенные из него MTD-разделы.
 
 ## Что остаётся проверить
 
-- Точное назначение сервиса `TCP/7060`.
 - Механизм постоянного сохранения настроек во flash.
 - Назначение `SDA`/`CLK`.
 - Есть ли полноценный USB data-интерфейс.

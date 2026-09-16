@@ -25,9 +25,6 @@ if ($EndoscopeTelnetUser -eq '<LOGIN>' -or $EndoscopeTelnetPassword -eq '<PASSWO
 
 function Resolve-Plink {
   $candidates = @(
-    (Join-Path $PSScriptRoot '..\tools\plink.exe'),
-    (Join-Path $PSScriptRoot '..\tools\PuTTY\plink.exe'),
-    (Join-Path $PSScriptRoot '..\tools\putty\plink.exe'),
     "$env:ProgramFiles\PuTTY\plink.exe",
     "${env:ProgramFiles(x86)}\PuTTY\plink.exe"
   )
@@ -41,7 +38,7 @@ function Resolve-Plink {
   $cmd = Get-Command plink.exe -ErrorAction SilentlyContinue
   if ($cmd) { return $cmd.Source }
 
-  throw "plink.exe not found. Install PuTTY or put plink.exe into tools\."
+  throw "plink.exe not found. Install PuTTY or add plink.exe to PATH."
 }
 
 $plink = Resolve-Plink

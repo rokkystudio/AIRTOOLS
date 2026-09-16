@@ -24,15 +24,10 @@ if ($EndoscopeTelnetUser -eq '<LOGIN>' -or $EndoscopeTelnetPassword -eq '<PASSWO
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
-$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $outFile = Join-Path $OutDir 'flash_full_mtd0.bin'
-$metaFile = Join-Path $OutDir "firmware-dump-$stamp.json"
-$logFile = Join-Path $OutDir "firmware-dump-$stamp.log"
 
 function Log([string]$Message) {
-  $line = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
-  Add-Content -LiteralPath $logFile -Value $line -Encoding UTF8
-  Write-Host $line
+  Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
 }
 
 function Send-TelnetBytes {
@@ -266,50 +261,19 @@ function Split-Part {
   }
 }
 
-Log "Running read-only Telnet diagnostics"
+Log "Checking flash layout and BusyBox tcpsvd"
 $checkOut = Invoke-TelnetCommand -Command 'cat /proc/mtd' -TimeoutMs 10000
-$devMtdOut = Invoke-TelnetCommand -Command 'ls -l /dev/mtd*' -TimeoutMs 10000
-$devMtdBlockOut = Invoke-TelnetCommand -Command 'ls -l /dev/mtdblock*' -TimeoutMs 10000
-$whichTcpsvdOut = Invoke-TelnetCommand -Command 'which tcpsvd' -TimeoutMs 10000
-$whichNcOut = Invoke-TelnetCommand -Command 'which nc' -TimeoutMs 10000
-$whichDdOut = Invoke-TelnetCommand -Command 'which dd' -TimeoutMs 10000
 $busyboxOut = Invoke-TelnetCommand -Command 'busybox' -TimeoutMs 10000
 
-$checkFile = Join-Path $OutDir "firmware-diagnostics-$stamp.txt"
-@(
-  '=== cat /proc/mtd ==='
-  $checkOut
-  ''
-  '=== ls -l /dev/mtd* ==='
-  $devMtdOut
-  ''
-  '=== ls -l /dev/mtdblock* ==='
-  $devMtdBlockOut
-  ''
-  '=== which tcpsvd ==='
-  $whichTcpsvdOut
-  ''
-  '=== which nc ==='
-  $whichNcOut
-  ''
-  '=== which dd ==='
-  $whichDdOut
-  ''
-  '=== busybox ==='
-  $busyboxOut
-) | Out-File -LiteralPath $checkFile -Encoding UTF8
-
 if ($checkOut -notlike '*mtd0: 00400000 00010000 "ALL"*') {
-  throw "Unexpected mtd0 layout. See: $checkFile"
+  throw 'Unexpected mtd0 layout.'
 }
 if ($busyboxOut -notmatch '(?m)\btcpsvd\b') {
-  throw "BusyBox tcpsvd applet is not available. See: $checkFile"
+  throw 'BusyBox tcpsvd applet is not available.'
 }
 
 Log "Starting foreground TCP sender for /dev/mtd0 while keeping Telnet open"
 $startCmd = "busybox tcpsvd -c 1 $EndoscopeTelnetHost $ServerPort cat /dev/mtd0"
-$startFile = Join-Path $OutDir "tcp-sender-start-$stamp.txt"
-$startCmd | Out-File -LiteralPath $startFile -Encoding UTF8
 $senderSession = Invoke-TelnetCommand -Command $startCmd -KeepOpen
 
 Start-Sleep -Milliseconds 300
@@ -343,6 +307,10 @@ try {
     }
   }
 }
+catch {
+  if (Test-Path -LiteralPath $partialFile) { Remove-Item -LiteralPath $partialFile -Force }
+  throw
+}
 finally {
   if ($fs) { try { $fs.Close() } catch {} }
   if ($ns) { try { $ns.Close() } catch {} }
@@ -358,11 +326,13 @@ finally {
 
 Log "Received total $total bytes"
 if ($total -ne $ExpectedBytes) {
-  throw "Unexpected dump size: $total bytes, expected $ExpectedBytes bytes. Partial file: $partialFile"
+  if (Test-Path -LiteralPath $partialFile) { Remove-Item -LiteralPath $partialFile -Force }
+  throw "Unexpected dump size: $total bytes, expected $ExpectedBytes bytes"
 }
 
 $actualBytes = (Get-Item -LiteralPath $partialFile).Length
 if ($actualBytes -ne $ExpectedBytes) {
+  Remove-Item -LiteralPath $partialFile -Force
   throw "Unexpected dump file size: $actualBytes bytes, expected $ExpectedBytes bytes"
 }
 
@@ -378,20 +348,11 @@ $parts = @(
   Split-Part -Name 'mtd4_kernel.bin'     -Offset 0x050000 -Length 0x3B0000
 )
 
-$meta = [pscustomobject]@{
-  Timestamp = (Get-Date).ToString('o')
-  Method = 'Wi-Fi Telnet + TCP raw /dev/mtd0'
-  Host = $EndoscopeTelnetHost
-  Port = $ServerPort
+[pscustomobject]@{
   FullDump = [pscustomobject]@{
     Path = $outFile
     Bytes = $total
     SHA256 = $sha
   }
   Parts = $parts
-  Logs = @($logFile, $checkFile, $startFile)
-}
-$meta | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $metaFile -Encoding UTF8
-Log "Metadata $metaFile"
-
-$meta | ConvertTo-Json -Depth 6
+} | ConvertTo-Json -Depth 6

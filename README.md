@@ -1,38 +1,35 @@
-﻿# ENDOSCOPE
+# ENDOSCOPE
 
-Рабочий проект по исследованию и изменению старого Wi-Fi эндоскопа.
-
-Это не финальное руководство и не отчёт только про восстановление доступа. Сейчас проект находится в стадии исследования: мы получили терминал, разложили исходные материалы по папкам и дальше будем менять систему по своему усмотрению. Что именно получится в итоге, пока неизвестно.
+Рабочий проект по исследованию и модификации старого Wi-Fi эндоскопа.
 
 ## Главные файлы
 
 - [DEVICE.md](DEVICE.md) — проверенные характеристики нашего экземпляра.
+- [SYSTEM.md](SYSTEM.md) — общая информация о Linux, прошивке и сервисах.
 - [CREDS.md](CREDS.md) — данные доступа и восстановление Telnet.
-- [TONY.md](TONY.md) — внешняя статья о похожем устройстве.
+- [TONY.md](TONY.md) — заметки по внешней статье о похожем устройстве.
 
 ## Быстрый старт
 
-### Подключение по Wi-Fi / Telnet
+### Wi-Fi / Telnet
 
 ```powershell
 D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-wifi.bat
 ```
 
-Данные входа см. в `CREDS.md`.
-
-Для команд через Telnet без передачи пароля в чат используется локальный config-файл:
+Локальные Telnet-параметры для автоматизации находятся в:
 
 ```text
 agent\endoscope-telnet.local.ps1
 ```
 
-Запуск одной команды через Telnet:
+Запуск одной команды:
 
 ```powershell
 D:\PROJECTS\ENDOSCOPE\agent\run-endoscope-telnet-command.bat "cat /proc/cpuinfo"
 ```
 
-### Подключение напрямую через UART
+### UART
 
 ```powershell
 D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-uart.bat
@@ -48,45 +45,68 @@ D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-uart.bat COM4
 
 ```text
 README.md                  краткий указатель по проекту
-DEVICE.md                  характеристики нашего экземпляра
-CREDS.md             данные доступа и восстановление Telnet
-TONY.md                    отдельные заметки по внешней статье
+DEVICE.md                  характеристики экземпляра
+SYSTEM.md                  общая информация о Linux/firmware
+CREDS.md                   данные доступа
+TONY.md                    заметки по внешней статье
+
 images\                    фотографии платы
-logs\                      UART boot logs и shell output
-hashcat\                   hashcat input, potfile, найденный пароль и BAT-файлы
-scripts\                   BAT-файлы ручного подключения
-agent\                    локальные файлы для Telnet-команд агента
-tools\                     локальные утилиты, например portable PuTTY
-_backup\                   backup перед реорганизацией и правками
+dumps\                     полный flash dump и MTD-разделы
+hashcat\                   hash input, potfile, result и run-len1-8.bat
+scripts\                   ручные BAT-скрипты подключения
+agent\                     Telnet automation
 ```
 
-## Что уже сделано
+## Flash backup
 
-- Фотографии платы перенесены в `images\`.
-- UART boot log и выводы shell-команд перенесены в `logs\`.
-- Hashcat-файлы и BAT-скрипты перебора перенесены в `hashcat\`.
-- Активные скрипты подключения оставлены в `scripts\`.
-- Данные нашего устройства отделены от сведений из внешней статьи.
-- Секретные значения вынесены из README в `CREDS.md`.
+Полный backup SPI flash уже снят и хранится в:
+
+```text
+dumps\flash_full_mtd0.bin
+```
+
+Разделы также сохранены отдельно:
+
+```text
+dumps\mtd1_bootloader.bin
+dumps\mtd2_config.bin
+dumps\mtd3_factory.bin
+dumps\mtd4_kernel.bin
+```
+
+Подробности и SHA256 находятся в [DEVICE.md](DEVICE.md).
+
+## Hashcat
+
+В `hashcat\` оставлен один launch-файл:
+
+```text
+hashcat\run-len1-8.bat
+```
+
+Он запускает mask attack для длин от 1 до 8 символов с charset `?l?d`.
+
+Остальные файлы каталога:
+
+```text
+hash.txt
+hashcat-endoscope.potfile
+hashcat-found.txt
+```
 
 ## Текущий статус
 
-Терминал доступен двумя путями:
+Устройство доступно:
 
-- напрямую через UART;
-- по штатному Telnet после восстановления данных входа.
+- через UART shell;
+- по Telnet через Wi-Fi.
 
-Дальше проект переходит от получения доступа к изменению и исследованию системы.
+Сохранён полный flash dump, а общая карта Linux-системы находится в [SYSTEM.md](SYSTEM.md).
 
-## Следующие шаги
+При экспериментах с Wi-Fi, NVRAM или flash UART следует держать как recovery-канал.
 
-1. Сделать полный backup SPI flash до любых постоянных изменений.
-2. Для будущего полного дампа SPI flash создать отдельную папку заново; UART `.bin` остаются в `logs\`.
-3. Разобрать сервис `TCP/7060`.
-4. Понять механизм сохранения настроек во flash.
-5. Проверить, какие изменения можно безопасно делать в RAM, а какие требуют прошивки.
-6. После новых экспериментов обновлять `DEVICE.md`, а не раздувать README.
+## Дальше
 
-
-
-
+1. Перед постоянными изменениями использовать сохранённый flash dump как recovery backup.
+2. Изменения Wi-Fi и flash выполнять только при доступном UART recovery.
+3. По мере экспериментов обновлять `DEVICE.md` и `SYSTEM.md`.

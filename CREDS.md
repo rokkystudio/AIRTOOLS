@@ -107,10 +107,10 @@ speed: about 1274 MH/s
 progress at crack: about 22.15% of full length-8 keyspace
 ``
 
-Просмотр результата:
+Текущий запуск перебора длины 1..8:
 
 ``powershell
-D:\PROJECTS\ENDOSCOPE\hashcat\show-result.bat
+D:\PROJECTS\ENDOSCOPE\hashcat\run-len1-8.bat
 ``
 
 Файлы восстановления:
@@ -119,10 +119,7 @@ D:\PROJECTS\ENDOSCOPE\hashcat\show-result.bat
 D:\PROJECTS\ENDOSCOPE\hashcat\hash.txt
 D:\PROJECTS\ENDOSCOPE\hashcat\hashcat-endoscope.potfile
 D:\PROJECTS\ENDOSCOPE\hashcat\hashcat-found.txt
-D:\PROJECTS\ENDOSCOPE\hashcat\run-len1-6.bat
-D:\PROJECTS\ENDOSCOPE\hashcat\run-len7.bat
-D:\PROJECTS\ENDOSCOPE\hashcat\run-len8.bat
-D:\PROJECTS\ENDOSCOPE\hashcat\show-result.bat
+D:\PROJECTS\ENDOSCOPE\hashcat\run-len1-8.bat
 ``
 
 ## Данные из внешней статьи, не от нашего устройства

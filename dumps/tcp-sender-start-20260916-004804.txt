@@ -1,2 +1,0 @@
-﻿echo __BEGIN__; tcpsvd -c 1 0.0.0.0 9000 cat /dev/mtd0 2>/tmp/mtd0-dump.err & 
-echo __DUMP_SERVER_STARTED__; echo __END__
