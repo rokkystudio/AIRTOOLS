@@ -1,112 +1,146 @@
 # ENDOSCOPE
 
-Рабочий проект по исследованию и модификации старого Wi-Fi эндоскопа.
+Проект исследования и модификации Wi-Fi эндоскопа на MT7628.
 
-## Главные файлы
+## Документация
 
-- [DEVICE.md](DEVICE.md) — проверенные характеристики нашего экземпляра.
-- [SYSTEM.md](SYSTEM.md) — общая информация о Linux, прошивке и сервисах.
+- [DEVICE.md](DEVICE.md) — характеристики конкретного экземпляра.
+- [SYSTEM.md](SYSTEM.md) — общая карта Linux и прошивки.
+- [FIRMWARE.md](FIRMWARE.md) — сборка, RAM test boot, flash и recovery.
 - [CREDS.md](CREDS.md) — данные доступа и восстановление Telnet.
 - [TONY.md](TONY.md) — заметки по внешней статье о похожем устройстве.
 
-## Быстрый старт
+## Структура проекта
 
-### Wi-Fi / Telnet
+```text
+dumps\
+  original\                 неизменяемые заводские flash/MTD dumps
+  modified\                 готовые модифицированные partition images
 
-```powershell
-D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-wifi.bat
+services\connectivity\      исходник и сборка локального DNS/HTTP daemon
+toolchain\llvm\             MIPS cross compilation
+toolchain\lzma920\          legacy LZMA encoder/decoder
+scripts\                     build, UART, recovery
+agent\                       Telnet automation
+images\                      фотографии платы
+hashcat\                     сохранённые hashcat-файлы
 ```
 
-Локальные Telnet-параметры для автоматизации находятся в:
+## Заводской backup
+
+```text
+dumps\original\flash_full_mtd0.bin
+dumps\original\mtd1_bootloader.bin
+dumps\original\mtd2_config.bin
+dumps\original\mtd3_factory.bin
+dumps\original\mtd4_kernel.bin
+```
+
+`dumps\original` не должен изменяться сборочными или flash-скриптами.
+
+## Сборка modified firmware
+
+```powershell
+scripts\build-firmware.bat
+```
+
+Сборка выполняет:
+
+1. MIPS-компиляцию `endoscope-connectivity`;
+2. сборку `mtd4_connectivity.bin`;
+3. обязательный firmware preflight.
+
+Успешный результат должен содержать:
+
+```text
+PRELIGHT OK
+```
+
+Готовый образ:
+
+```text
+dumps\modified\mtd4_connectivity.bin
+```
+
+## Безопасный порядок обновления
+
+Новый modified image **не записывается сразу во flash**.
+
+Сначала обязательный RAM-only boot:
+
+```powershell
+python scripts\uart-test-boot.py --image dumps\modified\mtd4_connectivity.bin --boot
+```
+
+U-Boot загружает uImage по UART в RAM и выполняет `bootm`. SPI flash этим тестом не изменяется.
+
+Только после успешного RAM boot и проверки нужных сервисов допускается запись `mtd4`.
+
+Подробно: [FIRMWARE.md](FIRMWARE.md).
+
+## UART recovery
+
+Параметры:
+
+```text
+COM3
+57600 8N1
+flow control: none
+```
+
+Подключение:
+
+```text
+CP2102 GND -> GND
+CP2102 RXD -> T
+CP2102 TXD -> R
+питание с CP2102 не подключать
+```
+
+Загрузка заводской прошивки только в RAM:
+
+```powershell
+python scripts\uart-test-boot.py --image dumps\original\mtd4_kernel.bin --boot
+```
+
+Это основной recovery-путь перед любой постоянной записью.
+
+## Wi-Fi / Telnet
+
+После нормальной загрузки системы:
+
+```powershell
+scripts\connect-endoscope-wifi.bat
+```
+
+Одна Telnet-команда:
+
+```powershell
+agent\run-endoscope-telnet-command.bat "cat /proc/cpuinfo"
+```
+
+Локальные параметры Telnet находятся в:
 
 ```text
 agent\endoscope-telnet.local.ps1
 ```
 
-Запуск одной команды:
+## UART terminal
 
 ```powershell
-D:\PROJECTS\ENDOSCOPE\agent\run-endoscope-telnet-command.bat "cat /proc/cpuinfo"
-```
-
-### UART
-
-```powershell
-D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-uart.bat
+scripts\connect-endoscope-uart.bat
 ```
 
 Для другого COM-порта:
 
 ```powershell
-D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-uart.bat COM4
+scripts\connect-endoscope-uart.bat COM4
 ```
 
-## Структура проекта
+## Текущий recovery
 
-```text
-README.md                  краткий указатель по проекту
-DEVICE.md                  характеристики экземпляра
-SYSTEM.md                  общая информация о Linux/firmware
-CREDS.md                   данные доступа
-TONY.md                    заметки по внешней статье
+Текущий flash `mtd4` содержит предыдущую тестовую сборку, которую U-Boot не может распаковать.
 
-images\                    фотографии платы
-dumps\                     полный flash dump и MTD-разделы
-hashcat\                   hash input, potfile, result и run-len1-8.bat
-scripts\                   ручные BAT-скрипты подключения
-agent\                     Telnet automation
-```
+Причина определена: внешний LZMA stream был создан в формате с неизвестным unpacked size. Исправленная сборка использует legacy LZMA SDK 9.20 и проходит обязательный preflight.
 
-## Flash backup
-
-Полный backup SPI flash уже снят и хранится в:
-
-```text
-dumps\flash_full_mtd0.bin
-```
-
-Разделы также сохранены отдельно:
-
-```text
-dumps\mtd1_bootloader.bin
-dumps\mtd2_config.bin
-dumps\mtd3_factory.bin
-dumps\mtd4_kernel.bin
-```
-
-Подробности и SHA256 находятся в [DEVICE.md](DEVICE.md).
-
-## Hashcat
-
-В `hashcat\` оставлен один launch-файл:
-
-```text
-hashcat\run-len1-8.bat
-```
-
-Он запускает mask attack для длин от 1 до 8 символов с charset `?l?d`.
-
-Остальные файлы каталога:
-
-```text
-hash.txt
-hashcat-endoscope.potfile
-hashcat-found.txt
-```
-
-## Текущий статус
-
-Устройство доступно:
-
-- через UART shell;
-- по Telnet через Wi-Fi.
-
-Сохранён полный flash dump, а общая карта Linux-системы находится в [SYSTEM.md](SYSTEM.md).
-
-При экспериментах с Wi-Fi, NVRAM или flash UART следует держать как recovery-канал.
-
-## Дальше
-
-1. Перед постоянными изменениями использовать сохранённый flash dump как recovery backup.
-2. Изменения Wi-Fi и flash выполнять только при доступном UART recovery.
-3. По мере экспериментов обновлять `DEVICE.md` и `SYSTEM.md`.
+Recovery выполняется через UART с заводским `dumps\original\mtd4_kernel.bin`, загружаемым сначала только в RAM.

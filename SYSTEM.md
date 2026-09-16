@@ -292,4 +292,22 @@ dumps/
 Более общая информация об устройстве находится в:
 
 - [DEVICE.md](DEVICE.md)
+- [FIRMWARE.md](FIRMWARE.md)
 - [README.md](README.md)
+
+## Модифицированный образ
+
+Разделы выше описывают возможности и состав заводской прошивки.
+
+Текущая modified-сборка `dumps\modified\mtd4_connectivity.bin` предназначена для режима Wi-Fi AP без эндоскопа и удаляет из rootfs:
+
+- `app_cam`;
+- старый `app_detect`;
+- `video_ko.sh`;
+- UVC/V4L2 video modules.
+
+Вместо них добавлен небольшой `/bin/endoscope-connectivity`, который обслуживает локальные DNS/HTTP connectivity checks телефона.
+
+DHCP в modified-сборке берёт LAN/DHCP параметры из Ralink NVRAM и выдаёт IP самого AP как DNS.
+
+Правила сборки, RAM test boot и recovery находятся в [FIRMWARE.md](FIRMWARE.md).

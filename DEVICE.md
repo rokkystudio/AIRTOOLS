@@ -180,13 +180,13 @@ none on /sys type sysfs (rw,relatime)
 
 Полный дамп SPI flash снят через Wi-Fi: Telnet используется для запуска `busybox tcpsvd`, а Windows принимает raw-поток `/dev/mtd0` по TCP.
 
-- [Полный flash, mtd0](dumps/flash_full_mtd0.bin) — 4194304 bytes, SHA256 `C11AD67DE1A32884BE18A00655CAA75FE0CB883520F1F422A629009DA72E3967`
-- [Bootloader, mtd1](dumps/mtd1_bootloader.bin) — offset `0x000000`, size `0x030000`, SHA256 `9012C77628E5A7724D7FEA2641399978089445CFC655671EE872741725CA31B6`
-- [Config, mtd2](dumps/mtd2_config.bin) — offset `0x030000`, size `0x010000`, SHA256 `19F1E55B1DC8E23DFC9DC94A5343EA05EC6352464F7BFF99C76ADBF9EA78E607`
-- [Factory, mtd3](dumps/mtd3_factory.bin) — offset `0x040000`, size `0x010000`, SHA256 `62755F6E645C3C0F7D20BD348D11AC7668A2C2254DE4AA325298EA808F86B0CD`
-- [Kernel, mtd4](dumps/mtd4_kernel.bin) — offset `0x050000`, size `0x3B0000`, SHA256 `72904FD990D724D81CF2EBD3C1E812954C55422442D16CAB7C0E152FF3610C2D`
+- [Полный flash, mtd0](dumps/original/flash_full_mtd0.bin) — 4194304 bytes, SHA256 `C11AD67DE1A32884BE18A00655CAA75FE0CB883520F1F422A629009DA72E3967`
+- [Bootloader, mtd1](dumps/original/mtd1_bootloader.bin) — offset `0x000000`, size `0x030000`, SHA256 `9012C77628E5A7724D7FEA2641399978089445CFC655671EE872741725CA31B6`
+- [Config, mtd2](dumps/original/mtd2_config.bin) — offset `0x030000`, size `0x010000`, SHA256 `19F1E55B1DC8E23DFC9DC94A5343EA05EC6352464F7BFF99C76ADBF9EA78E607`
+- [Factory, mtd3](dumps/original/mtd3_factory.bin) — offset `0x040000`, size `0x010000`, SHA256 `62755F6E645C3C0F7D20BD348D11AC7668A2C2254DE4AA325298EA808F86B0CD`
+- [Kernel, mtd4](dumps/original/mtd4_kernel.bin) — offset `0x050000`, size `0x3B0000`, SHA256 `72904FD990D724D81CF2EBD3C1E812954C55422442D16CAB7C0E152FF3610C2D`
 
-Каталог `dumps\` содержит полный дамп flash и выделенные из него MTD-разделы.
+`dumps\original\` содержит неизменяемые заводские recovery-дампы. Готовые модифицированные partition images хранятся отдельно в `dumps\modified\`.
 
 ## Что остаётся проверить
 
