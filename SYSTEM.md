@@ -6,25 +6,25 @@ Wi-Fi эндоскоп построен на платформе MediaTek/Ralink 
 
 Основные параметры:
 
-| Параметр | Значение |
-|---|---|
-| SoC | MediaTek/Ralink MT7628 |
-| CPU | MIPS 24Kc |
-| Architecture | MIPS32 little-endian |
-| RAM | около 64 MiB |
-| SPI flash | Winbond W25Q32BV, 4 MiB |
-| UART | ttyS1, 57600 8N1 |
+| Параметр     | Значение                |
+|--------------|-------------------------|
+| SoC          | MediaTek/Ralink MT7628  |
+| CPU          | MIPS 24Kc               |
+| Architecture | MIPS32 little-endian    |
+| RAM          | около 64 MiB            |
+| SPI flash    | Winbond W25Q32BV, 4 MiB |
+| UART         | ttyS1, 57600 8N1        |
 
 ## Прошивка
 
-| Компонент | Версия |
-|---|---|
-| Firmware | NuCam-7688-3003 |
-| Build | 2019-03-11 17:00:46 |
-| Linux kernel | 2.6.36 |
-| BusyBox | 1.23.0 |
-| libc | uClibc 0.9.33.2 |
-| Toolchain | GCC 4.6.3 / Buildroot 2012.11.1 |
+| Компонент    | Версия                          |
+|--------------|---------------------------------|
+| Firmware     | NuCam-7688-3003                 |
+| Build        | 2019-03-11 17:00:46             |
+| Linux kernel | 2.6.36                          |
+| BusyBox      | 1.23.0                          |
+| libc         | uClibc 0.9.33.2                 |
+| Toolchain    | GCC 4.6.3 / Buildroot 2012.11.1 |
 
 Система представляет собой минимальную embedded Linux-прошивку без обычного пакетного менеджера.
 
@@ -34,12 +34,12 @@ Root filesystem встроен непосредственно в kernel image к
 
 Полный SPI flash имеет размер 4 MiB.
 
-| MTD | Offset | Size | Назначение |
-|---|---:|---:|---|
+| MTD  |     Offset |       Size | Назначение                           |
+|------|-----------:|-----------:|--------------------------------------|
 | mtd1 | `0x000000` | `0x030000` | U-Boot + служебные данные приложения |
-| mtd2 | `0x030000` | `0x010000` | Ralink NVRAM / Config |
-| mtd3 | `0x040000` | `0x010000` | Factory / MT7628 EEPROM |
-| mtd4 | `0x050000` | `0x3B0000` | Linux kernel + встроенный rootfs |
+| mtd2 | `0x030000` | `0x010000` | Ralink NVRAM / Config                |
+| mtd3 | `0x040000` | `0x010000` | Factory / MT7628 EEPROM              |
+| mtd4 | `0x050000` | `0x3B0000` | Linux kernel + встроенный rootfs     |
 
 ### mtd1
 
@@ -51,12 +51,12 @@ Root filesystem встроен непосредственно в kernel image к
 
 Содержит стандартные Ralink NVRAM banks:
 
-| Bank | Offset внутри mtd2 | Size |
-|---|---:|---:|
-| `2860` | `0x2000` | `0x4000` |
-| `rtdev` | `0x6000` | `0x2000` |
-| `cert` | `0x8000` | `0x2000` |
-| `wapi` | `0xA000` | `0x5000` |
+| Bank    | Offset внутри mtd2 |     Size |
+|---------|-------------------:|---------:|
+| `2860`  |           `0x2000` | `0x4000` |
+| `rtdev` |           `0x6000` | `0x2000` |
+| `cert`  |           `0x8000` | `0x2000` |
+| `wapi`  |           `0xA000` | `0x5000` |
 
 В них находятся параметры Wi-Fi, LAN/WAN, DHCP, security, WPS, driver settings и другие настройки Ralink SDK.
 
@@ -201,14 +201,14 @@ pwm_drv.ko
 
 Из известных сервисов:
 
-| Protocol | Port | Назначение |
-|---|---:|---|
-| TCP | 23 | Telnet |
-| TCP | 7060 | video stream |
-| TCP | 8060 | app_cam command/update service |
-| TCP | 9060 | TCP ↔ UART bridge |
-| UDP | 50000 | app_cam command service |
-| UDP | 52100 | UDP ↔ UART bridge |
+| Protocol |  Port | Назначение                     |
+|----------|------:|--------------------------------|
+| TCP      |    23 | Telnet                         |
+| TCP      |  7060 | video stream                   |
+| TCP      |  8060 | app_cam command/update service |
+| TCP      |  9060 | TCP ↔ UART bridge              |
+| UDP      | 50000 | app_cam command service        |
+| UDP      | 52100 | UDP ↔ UART bridge              |
 
 ## Video stream
 
