@@ -1,0 +1,27 @@
+
+# echo AFTER_ABORT_CHECK
+AFTER_ABORT_CHECK
+# cd /tmp; ls -l mtd2_config_BootType3.bin 2>/dev/null || echo NO_MTD2_TMP; ps |
+ grep tftp | grep -v grep || echo NO_TFTP_PROC
+NO_MTD2_TMP
+NO_TFTP_PROC
+# ifconfig ra1 2>/dev/null; route -n 2>/dev/null
+ra1       Link encap:Ethernet  HWaddr E8:AB:FA:AE:6E:A1  
+          inet addr:192.168.10.123  Bcast:192.168.10.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:785 errors:2 dropped:0 overruns:0 frame:0
+          TX packets:273 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:186279 (181.9 KiB)  TX bytes:29501 (28.8 KiB)
+          Interrupt:4 
+
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.10.0    0.0.0.0         255.255.255.0   U     0      0        0 ra1
+# ping -c 1 -W 2 192.168.10.36; echo PING_RET:$?
+PING 192.168.10.36 (192.168.10.36): 56 data bytes
+
+--- 192.168.10.36 ping statistics ---
+1 packets transmitted, 0 packets received, 100% packet loss
+PING_RET:1
+# 

@@ -1,0 +1,3 @@
+
+# echo __M2_BEGIN__; flash -r 30000 -c 65536; echo __M2_END__
+__M2_BEGIN__

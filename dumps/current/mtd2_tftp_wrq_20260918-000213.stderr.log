@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "D:\PROJECTS\ENDOSCOPE\scripts\tftp_wrq_once_mtd2.py", line 7, in <module>
+    data,addr=s.recvfrom(2048)
+TimeoutError: timed out

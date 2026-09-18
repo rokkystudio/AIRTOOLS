@@ -1,0 +1,242 @@
+   Verifying Checksum ... OK
+   Uncompressing Kernel Image ... LZMA ERROR 1 - must RESET board to recover
+[04050D08][04050C0E]
+DDR Calibration DQS reg = 0000898A
+
+
+U-Boot 1.1.3 (Aug  9 2018 - 17:34:36)
+
+Board: Ralink APSoC DRAM:  64 MB
+relocate_code Pointer at: 83fa0000
+******************************
+Software System Reset Occurred
+******************************
+flash manufacture id: ef, device id 40 16
+find flash: W25Q32BV
+============================================ 
+Ralink UBoot Version: 5.0.0.0
+-------------------------------------------- 
+ASIC 7628_MP (Port5<->None)
+DRAM component: 512 Mbits DDR, width 16
+DRAM bus: 16 bit
+Total memory: 64 MBytes
+Flash component: SPI Flash
+Date:Aug  9 2018  Time:17:34:36
+============================================ 
+icache: sets:512, ways:4, linesz:32 ,total:65536
+dcache: sets:256, ways:4, linesz:32 ,total:32768 
+
+ ##### The CPU freq = 580 MHZ #### 
+ estimate memory size =64 Mbytes
+RESET MT7628 PHY!!!!!!default: 3
+
+   
+3: System Boot system code via Flash.
+## Booting image at bc050000 ...
+   Image Name:   Linux Kernel Image
+   Image Type:   MIPS Linux Kernel Image (lzma compressed)
+   Data Size:    2927713 Bytes =  2.8 MB
+   Load Address: 80000000
+   Entry Point:  8000c150
+   Verifying Checksum ... OK
+   Uncompressing Kernel Image ... LZMA ERROR 1 - must RESET board to recover
+[04050D07][04050C0D]
+DDR Calibration DQS reg = 0000898A
+
+
+U-Boot 1.1.3 (Aug  9 2018 - 17:34:36)
+
+Board: Ralink APSoC DRAM:  64 MB
+relocate_code Pointer at: 83fa0000
+******************************
+Software System Reset Occurred
+******************************
+flash manufacture id: ef, device id 40 16
+find flash: W25Q32BV
+============================================ 
+Ralink UBoot Version: 5.0.0.0
+-------------------------------------------- 
+ASIC 7628_MP (Port5<->None)
+DRAM component: 512 Mbits DDR, width 16
+DRAM bus: 16 bit
+Total memory: 64 MBytes
+Flash component: SPI Flash
+Date:Aug  9 2018  Time:17:34:36
+============================================ 
+icache: sets:512, ways:4, linesz:32 ,total:65536
+dcache: sets:256, ways:4, linesz:32 ,total:32768 
+
+ ##### The CPU freq = 580 MHZ #### 
+ estimate memory size =64 Mbytes
+RESET MT7628 PHY!!!!!!default: 3
+
+   
+3: System Boot system code via Flash.
+## Booting image at bc050000 ...
+   Image Name:   Linux Kernel Image
+   Image Type:   MIPS Linux Kernel Image (lzma compressed)
+   Data Size:    2927713 Bytes =  2.8 MB
+   Load Address: 80000000
+   Entry Point:  8000c150
+   Verifying Checksum ... OK
+   Uncompressing Kernel Image ... LZMA ERROR 1 - must RESET board to recover
+[04040D07][04040C0D]
+DDR Calibration DQS reg = 00008889
+
+
+U-Boot 1.1.3 (Aug  9 2018 - 17:34:36)
+
+Board: Ralink APSoC DRAM:  64 MB
+relocate_code Pointer at: 83fa0000
+******************************
+Software System Reset Occurred
+******************************
+flash manufacture id: ef, device id 40 16
+find flash: W25Q32BV
+============================================ 
+Ralink UBoot Version: 5.0.0.0
+-------------------------------------------- 
+ASIC 7628_MP (Port5<->None)
+DRAM component: 512 Mbits DDR, width 16
+DRAM bus: 16 bit
+Total memory: 64 MBytes
+Flash component: SPI Flash
+Date:Aug  9 2018  Time:17:34:36
+============================================ 
+icache: sets:512, ways:4, linesz:32 ,total:65536
+dcache: sets:256, ways:4, linesz:32 ,total:32768 
+
+ ##### The CPU freq = 580 MHZ #### 
+ estimate memory size =64 Mbytes
+RESET MT7628 PHY!!!!!!default: 3
+
+   
+3: System Boot system code via Flash.
+## Booting image at bc050000 ...
+   Image Name:   Linux Kernel Image
+   Image Type:   MIPS Linux Kernel Image (lzma compressed)
+   Data Size:    2927713 Bytes =  2.8 MB
+   Load Address: 80000000
+   Entry Point:  8000c150
+   Verifying Checksum ... OK
+   Uncompressing Kernel Image ... LZMA ERROR 1 - must RESET board to recover
+[04050D08][04050C0D]
+DDR Calibration DQS reg = 0000898A
+
+
+U-Boot 1.1.3 (Aug  9 2018 - 17:34:36)
+
+Board: Ralink APSoC DRAM:  64 MB
+relocate_code Pointer at: 83fa0000
+******************************
+Software System Reset Occurred
+******************************
+flash manufacture id: ef, device id 40 16
+find flash: W25Q32BV
+============================================ 
+Ralink UBoot Version: 5.0.0.0
+-------------------------------------------- 
+ASIC 7628_MP (Port5<->None)
+DRAM component: 512 Mbits DDR, width 16
+DRAM bus: 16 bit
+Total memory: 64 MBytes
+Flash component: SPI Flash
+Date:Aug  9 2018  Time:17:34:36
+============================================ 
+icache: sets:512, ways:4, linesz:32 ,total:65536
+dcache: sets:256, ways:4, linesz:32 ,total:32768 
+
+ ##### The CPU freq = 580 MHZ #### 
+ estimate memory size =64 Mbytes
+RESET MT7628 PHY!!!!!!default: 3
+
+   
+3: System Boot system code via Flash.
+## Booting image at bc050000 ...
+   Image Name:   Linux Kernel Image
+   Image Type:   MIPS Linux Kernel Image (lzma compressed)
+   Data Size:    2927713 Bytes =  2.8 MB
+   Load Address: 80000000
+   Entry Point:  8000c150
+   Verifying Checksum ... OK
+   Uncompressing Kernel Image ... LZMA ERROR 1 - must RESET board to recover
+[04050D08][04050C0D]
+DDR Calibration DQS reg = 0000898A
+
+
+U-Boot 1.1.3 (Aug  9 2018 - 17:34:36)
+
+Board: Ralink APSoC DRAM:  64 MB
+relocate_code Pointer at: 83fa0000
+******************************
+Software System Reset Occurred
+******************************
+flash manufacture id: ef, device id 40 16
+find flash: W25Q32BV
+============================================ 
+Ralink UBoot Version: 5.0.0.0
+-------------------------------------------- 
+ASIC 7628_MP (Port5<->None)
+DRAM component: 512 Mbits DDR, width 16
+DRAM bus: 16 bit
+Total memory: 64 MBytes
+Flash component: SPI Flash
+Date:Aug  9 2018  Time:17:34:36
+============================================ 
+icache: sets:512, ways:4, linesz:32 ,total:65536
+dcache: sets:256, ways:4, linesz:32 ,total:32768 
+
+ ##### The CPU freq = 580 MHZ #### 
+ estimate memory size =64 Mbytes
+RESET MT7628 PHY!!!!!!default: 3
+
+   
+3: System Boot system code via Flash.
+## Booting image at bc050000 ...
+   Image Name:   Linux Kernel Image
+   Image Type:   MIPS Linux Kernel Image (lzma compressed)
+   Data Size:    2927713 Bytes =  2.8 MB
+   Load Address: 80000000
+   Entry Point:  8000c150
+   Verifying Checksum ... OK
+   Uncompressing Kernel Image ... LZMA ERROR 1 - must RESET board to recover
+[04050D08][04050C0D]
+DDR Calibration DQS reg = 0000898A
+
+
+U-Boot 1.1.3 (Aug  9 2018 - 17:34:36)
+
+Board: Ralink APSoC DRAM:  64 MB
+relocate_code Pointer at: 83fa0000
+******************************
+Software System Reset Occurred
+******************************
+flash manufacture id: ef, device id 40 16
+find flash: W25Q32BV
+============================================ 
+Ralink UBoot Version: 5.0.0.0
+-------------------------------------------- 
+ASIC 7628_MP (Port5<->None)
+DRAM component: 512 Mbits DDR, width 16
+DRAM bus: 16 bit
+Total memory: 64 MBytes
+Flash component: SPI Flash
+Date:Aug  9 2018  Time:17:34:36
+============================================ 
+icache: sets:512, ways:4, linesz:32 ,total:65536
+dcache: sets:256, ways:4, linesz:32 ,total:32768 
+
+ ##### The CPU freq = 580 MHZ #### 
+ estimate memory size =64 Mbytes
+RESET MT7628 PHY!!!!!!default: 3
+
+   
+3: System Boot system code via Flash.
+## Booting image at bc050000 ...
+   Image Name:   Linux Kernel Image
+   Image Type:   MIPS Linux Kernel Image (lzma compressed)
+   Data Size:    2927713 Bytes =  2.8 MB
+   Load Address: 80000000
+   Entry Point:  8000c150
+   Verifying Checksum ... OK
+   Uncompressing Kernel Image ... 

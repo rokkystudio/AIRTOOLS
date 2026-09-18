@@ -1,0 +1,59 @@
+
+# 
+>>> mtd_write 2>&1
+mtd_write 2>&1; echo __END_a0ceac2a__
+Usage: mtd [<options> ...] <command> [<arguments> ...] <device>
+
+The device is in the format of mtdX (eg: mtd4) or its label.
+mtd recognizes these commands:
+        unlock                  unlock the device
+        erase                   erase all data on device
+        write <imagefile>|-     write <imagefile> (use - for stdin) to device
+Following options are available:
+        -q                      quiet mode (once: no [w] on writing,
+                                           twice: no status messages)
+        -r                      reboot after successful command
+        -e <device>             erase <device> before executing the command
+        -v                      output writing info. (1 more -v would output HTML format.)
+        -o <num>                file offset 
+        -l <num>                length in file
+        -w                      read after write action to check
+Example: To write linux.trx to mtd4 labeled as linux and reboot afterwards
+         mtd -r write linux.trx linux
+
+__END_a0ceac2a__
+# 
+>>> flash 2>&1
+flash 2>&1; echo __END_ca0c6fc9__
+Usage:
+  flash -n                     - Get ap name
+  flash -h                     - Get ap head
+  flash -p                     - Get ap password	0x56
+  flash -a                     - Get ap channel	0x76
+  flash -y                     - Get only usb		0xba
+  flash -u                     - Get uart status
+  flash -x                     - Set ap params, ApName, ApHead, ApPass, Uart null
+  flash -m                     - Get Mac address
+  flash -r <offset> -c <count> - read <count> bytes from <offset>
+  flash -s <offset> -c <count> - read <count> bytes from <offset>
+  flash -w <offset> -o <value> - write <offset> with <value>
+  flash -f <start> -l <end>    - erase from <start> to <end>
+Note:
+  <count> is decimal, the other parameters are hexadecimal
+__END_ca0c6fc9__
+# 
+>>> cat /proc/mtd
+cat /proc/mtd; echo __END_6eb3df33__
+dev:    size   erasesize  name
+mtd0: 00400000 00010000 "ALL"
+mtd1: 00030000 00010000 "Bootloader"
+mtd2: 00010000 00010000 "Config"
+mtd3: 00010000 00010000 "Factory"
+mtd4: 003b0000 00010000 "Kernel"
+__END_6eb3df33__
+# 
+>>> cd /tmp; ls -l mtd4_connectivity.bin
+cd /tmp; ls -l mtd4_connectivity.bin; echo __END_96d48d14__
+-rw-r--r--    1   3866624 Jan  1 00:11 mtd4_connectivity.bin
+__END_96d48d14__
+# 

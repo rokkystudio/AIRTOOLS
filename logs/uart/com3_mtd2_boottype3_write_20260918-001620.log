@@ -1,0 +1,24 @@
+
+# 
+>>> echo READY; cat /proc/mtd; cd /tmp; rm -f mtd2_config_BootType3.bin; ls -l /tmp
+(echo READY; cat /proc/mtd; cd /tmp; rm -f mtd2_config_BootType3.bin; ls -l /t
+mp); echo __M_0358ca30f7__
+READY
+dev:    size   erasesize  name
+mtd0: 00400000 00010000 "ALL"
+mtd1: 00030000 00010000 "Bootloader"
+mtd2: 00010000 00010000 "Config"
+mtd3: 00010000 00010000 "Factory"
+mtd4: 003b0000 00010000 "Kernel"
+-rw-r--r--    1     65536 Jan  1 00:04 mtd2_current.bin
+__M_0358ca30f7__
+# 
+>>> cd /tmp; tftp -g -r mtd2_config_BootType3.bin -l mtd2_config_BootType3.bin 192.168.10.36
+(cd /tmp; tftp -g -r mtd2_config_BootType3.bin -l mtd2_config_BootType3.bin 19
+2.168.10.36); echo __M_bc8816b007__
+
+>>> cd /tmp; echo FILE_CHECK; ls -l mtd2_config_BootType3.bin; wc -c mtd2_config_BootType3.bin 2>/dev/null || echo NO_WC
+(cd /tmp; echo FILE_CHECK; ls -l mtd2_config_BootType3.bin; wc -c mtd2_config_BootType3.bin 2>/dev/null || echo NO_WC); echo __M_3a46ce66b1__
+
+>>> cd /tmp; echo START_MTD2_WRITE; mtd_write -w write mtd2_config_BootType3.bin Config; echo MTD2_WRITE_RET:$?; sync; echo MTD2_SYNC_DONE
+(cd /tmp; echo START_MTD2_WRITE; mtd_write -w write mtd2_config_BootType3.bin Config; echo MTD2_WRITE_RET:$?; sync; echo MTD2_SYNC_DONE); echo __M_56826ec735__

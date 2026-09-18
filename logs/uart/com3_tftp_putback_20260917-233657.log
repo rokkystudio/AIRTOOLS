@@ -1,0 +1,13 @@
+
+# 
+>>> cd /tmp; ls -l mtd4_connectivity.bin
+cd /tmp; ls -l mtd4_connectivity.bin; echo __END_e4d128cf__
+-rw-r--r--    1   3866624 Jan  1 00:11 mtd4_connectivity.bin
+__END_e4d128cf__
+# 
+>>> cd /tmp; tftp -p -l mtd4_connectivity.bin -r mtd4_connectivity.roundtrip.bin 192.168.10.36
+cd /tmp; tftp -p -l mtd4_connectivity.bin -r mtd4_connectivity.roundtrip.bin 1
+92.168.10.36; echo __END_26d19044__
+
+>>> echo PUTBACK_DONE
+echo PUTBACK_DONE; echo __END_9fd49702__

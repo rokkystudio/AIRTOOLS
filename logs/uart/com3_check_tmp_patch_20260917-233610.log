@@ -1,0 +1,23 @@
+
+# 
+>>> cd /tmp; ls -l mtd4_connectivity.bin; wc -c mtd4_connectivity.bin 2>/dev/null || echo NO_WC
+cd /tmp; ls -l mtd4_connectivity.bin; wc -c mtd4_connectivity.bin 2>/dev/null 
+|| echo NO_WC; echo __END_d205d17b__
+-rw-r--r--    1   3866624 Jan  1 00:11 mtd4_connectivity.bin
+NO_WC
+__END_d205d17b__
+# 
+>>> cd /tmp; test -s mtd4_connectivity.bin && echo FILE_EXISTS || echo FILE_MISSING
+cd /tmp; test -s mtd4_connectivity.bin && echo FILE_EXISTS || echo FILE_MISSIN
+G; echo __END_e6cae84f__
+FILE_EXISTS
+__END_e6cae84f__
+# 
+>>> free
+free; echo __END_bfa752dd__
+             total         used         free       shared      buffers
+Mem:         60504        17868        42636            0            0
+-/+ buffers:              17868        42636
+Swap:            0            0            0
+__END_bfa752dd__
+# 

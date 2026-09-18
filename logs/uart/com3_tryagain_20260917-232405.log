@@ -1,0 +1,29 @@
+OK
+No initrd
+## Transferring control to Linux (at address 8000c150) ...
+## Giving linux memsize in MB, 64
+
+Starting kernel ...
+
+
+LINUX started...
+
+ THIS IS ASIC
+ralink_gpio --MoLink-- RALINK_REG_GPIOMODE[0xb0000060] gpio mode[0x15154455]
+ralink_gpio --MoLink-- RALINK_REG_GPIOMODE[0xb0000064] gpio mode[0x5540555]
+PROC INIT OK!
+gre: can't add protocol
+Welcome to
+    
+		Mo-Link Module		
+
+		        = Everyday Genius =
+		            
+module install
+starting pid 249, tty '/dev/ttyS1': '/bin/sh'
+
+
+BusyBox v1.23.0 (2018-03-30 18:02:20 CST) built-in shell (ash)
+Enter 'help' for a list of built-in commands.
+
+# 

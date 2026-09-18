@@ -1,0 +1,39 @@
+﻿import ctypes
+from ctypes import wintypes
+
+dll = ctypes.WinDLL(r'C:\Windows\System32\CH341DLLA64.DLL')
+dll.CH341OpenDevice.argtypes=[wintypes.ULONG]
+dll.CH341OpenDevice.restype=wintypes.HANDLE
+dll.CH341CloseDevice.argtypes=[wintypes.ULONG]
+dll.CH341CloseDevice.restype=None
+dll.CH341SetStream.argtypes=[wintypes.ULONG,wintypes.ULONG]
+dll.CH341SetStream.restype=wintypes.BOOL
+dll.CH341StreamSPI4.argtypes=[wintypes.ULONG,wintypes.ULONG,wintypes.ULONG,ctypes.c_void_p]
+dll.CH341StreamSPI4.restype=wintypes.BOOL
+
+def xfer(cs, data):
+    arr=(ctypes.c_ubyte*len(data))(*data)
+    ok=dll.CH341StreamSPI4(0, cs, len(data), ctypes.byref(arr))
+    return bool(ok), bytes(arr)
+
+h=dll.CH341OpenDevice(0)
+ok=bool(h and h != wintypes.HANDLE(-1).value)
+print('open', h, ok)
+if not ok:
+    raise SystemExit(2)
+try:
+    for mode in (0x80,0x81,0x82,0x83):
+        print('MODE 0x%02X set=%s' % (mode, bool(dll.CH341SetStream(0,mode))))
+        for cs in (0,0x80,1,0x81):
+            tests=[
+                ('JEDEC_9F', [0x9F,0,0,0]),
+                ('MFID_90', [0x90,0,0,0,0,0]),
+                ('REMS_AB', [0xAB,0,0,0,0]),
+                ('RDSR_05', [0x05,0]),
+            ]
+            for name,data in tests:
+                r,b=xfer(cs,data)
+                print(' cs=0x%02X %-8s ok=%s data=%s' % (cs,name,r,b.hex(' ')))
+finally:
+    dll.CH341CloseDevice(0)
+    print('closed')

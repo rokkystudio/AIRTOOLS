@@ -1,0 +1,28 @@
+
+# 
+>>> ps | grep -E "connectivity|ping|telnetd"
+ps | grep -E "connectivity|ping|telnetd"
+grep: invalid option -- E
+BusyBox v1.23.0 (2018-03-30 18:02:20 CST) multi-call binary.
+
+Usage: grep [-HhnlLoqvsriwF] [-m N] PATTERN/-e PATTERN.../-f FILE [FILE]...
+
+# 
+>>> route -n
+route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.10.0    0.0.0.0         255.255.255.0   U     0      0        0 ra1
+# 
+>>> ping -c 2 -W 2 192.168.10.36
+ping -c 2 -W 2 192.168.10.36
+PING 192.168.10.36 (192.168.10.36): 56 data bytes
+
+--- 192.168.10.36 ping statistics ---
+2 packets transmitted, 0 packets received, 100% packet loss
+# 
+>>> ping -c 2 -W 2 8.8.8.8
+ping -c 2 -W 2 8.8.8.8
+PING 8.8.8.8 (8.8.8.8): 56 data bytes
+ping: sendto: Network is unreachable
+# 

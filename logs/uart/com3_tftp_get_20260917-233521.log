@@ -1,0 +1,17 @@
+
+# 
+>>> echo READY; cd /tmp; rm -f mtd4_connectivity.bin mtd4_back.bin; ls -l /tmp
+echo READY; cd /tmp; rm -f mtd4_connectivity.bin mtd4_back.bin; ls -l /tmp; ec
+ho __END_7368d43a__
+READY
+__END_7368d43a__
+# 
+>>> cd /tmp; tftp -g -r mtd4_connectivity.bin -l mtd4_connectivity.bin 192.168.10.36
+cd /tmp; tftp -g -r mtd4_connectivity.bin -l mtd4_connectivity.bin 192.168.10.
+36; echo __END_5626cdeb__
+
+>>> cd /tmp; ls -l mtd4_connectivity.bin; wc -c mtd4_connectivity.bin 2>/dev/null || echo NO_WC
+cd /tmp; ls -l mtd4_connectivity.bin; wc -c mtd4_connectivity.bin 2>/dev/null || echo NO_WC; echo __END_3c8393fd__
+
+>>> free
+free; echo __END_5cd741f7__

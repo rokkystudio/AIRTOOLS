@@ -1,0 +1,94 @@
+
+# 
+>>> echo READY_PATCHED; ifconfig -a
+echo READY_PATCHED; ifconfig -a; echo __END_02f61454__
+READY_PATCHED
+eth2      Link encap:Ethernet  HWaddr 00:0C:43:E1:76:29  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          Interrupt:3 
+
+lo        Link encap:Local Loopback  
+          LOOPBACK  MTU:16436  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+ra0       Link encap:Ethernet  HWaddr 00:00:00:00:00:00  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          Interrupt:4 
+
+ra1       Link encap:E
+>>> route -n
+thernet  HWaddr E8:AB:FA:AE:6E:A1  
+          inet addr:192.168.10.123  Bcast:192.168.10.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:247 errors:2 dropped:0 overruns:0 frame:0
+          TX packets:39 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:35041 (34.2 KiB)  TX bytes:2892 (2.8 KiB)
+          Interrupt:4 
+
+__END_02f61454__
+# route -n; echo __END_1988371e__
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.10.0    0.0.0.0         255.255.255.0   U     0      0        0 ra1
+__END_1988371e__
+# 
+>>> cat /etc/resolv.conf 2>/dev/null || echo NO_RESOLV
+cat /etc/resolv.conf 2>/dev/null || echo NO_RESOLV; echo __END_3ac08096__
+NO_RESOLV
+__END_3ac08096__
+# 
+>>> ps
+ps; echo __END_4b359a2c__
+  PID USER       VSZ STAT COMMAND
+    1 molink    1420 S    init
+    2 molink       0 SW   [kthreadd]
+    3 molink       0 SW   [ksoftirqd/0]
+    4 molink       0 SW   [kworker/0:0]
+    5 molink       0 SW   [kworker/u:0]
+    6 molink       0 SW<  [khelper]
+    7 molink       0 SW   [sync_supers]
+    8 molink       0 SW   [bdi-default]
+    9 molink       0 SW<  [kblockd]
+   10 molink       0 SW   [khubd]
+   11 molink       0 SW   [kswapd0]
+   12 molink       0 SW<  [crypto]
+   21 molink       0 SW   [mtdblock0]
+   22 molink       0 SW   [mtdblock1]
+   23 molink       0 SW   [mtdblock2]
+   24 molink       0 SW   [mtdblock3]
+   25 molink       0 SW   [mtdblock4]
+   26 molink       0 SW   [kworker/u:1]
+   33 molink       0 SW   [kworker/0:1]
+  118 molink    1080 S    nvram_daemon
+  180 molink       0 SW   [RtmpCmdQTask]
+  181 molink       0 SW   [RtmpWscTask]
+  182 molink       0 SW   [RtmpMlmeTask]
+  208 molink    1432 S    {wifi_ap.sh} /bin/sh /sbin/wifi_ap.sh start ra1
+  210 molink     152 S    /bin/endoscope-connectivity 192.168.10.123
+  211 molink    1424 S    udhcpd /etc_ro/udhcpd.conf
+  222 molink    1420 S    /bin/sh
+  223 molink    1416 S    telnetd
+  234 molink    1420 R    ps
+__END_4b359a2c__
+# 
+>>> ping -c 2 -W 2 192.168.10.36
+ping -c 2 -W 2 192.168.10.36; echo __END_580afad7__
+PING 192.168.10.36 (192.168.10.36): 56 data bytes
+
+>>> ping -c 2 -W 2 8.8.8.8
+ping -c 2 -W 2 8.8.8.8; echo __END_7d939a9c__
+
+>>> ping -c 2 -W 2 google.com 2>&1
+ping -c 2 -W 2 google.com 2>&1; echo __END_5c8f8496__

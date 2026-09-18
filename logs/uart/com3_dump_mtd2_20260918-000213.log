@@ -1,0 +1,16 @@
+
+# 
+>>> cat /dev/mtd2ro > /tmp/mtd2_current.bin; sync; ls -l /tmp/mtd2_current.bin
+cat /dev/mtd2ro > /tmp/mtd2_current.bin; sync; ls -l /tmp/mtd2_current.bin
+-rw-r--r--    1     65536 Jan  1 00:04 /tmp/mtd2_current.bin
+# 
+>>> tftp -p -l /tmp/mtd2_current.bin -r mtd2_current.bin 192.168.10.36
+tftp -p -l /tmp/mtd2_current.bin -r mtd2_current.bin 192.168.10.36
+
+>>> echo TFTP_SENT; ls -l /tmp/mtd2_current.bin
+echo TFTP_SENT; ls -l /tmp/mtd2_current.bin
+tftp: timeout
+# echo TFTP_SENT; ls -l /tmp/mtd2_current.bin
+TFTP_SENT
+-rw-r--r--    1     65536 Jan  1 00:04 /tmp/mtd2_current.bin
+# 

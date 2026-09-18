@@ -1,0 +1,12 @@
+
+# cd /tmp; ls -l mtd2_config_BootType3.bin; echo START_MTD2_WRITE; mtd_write -w 
+write mtd2_config_BootType3.bin Config; echo MTD2_WRITE_RET:$?; sync; echo MTD2_
+SYNC_DONE; echo __MTD2_WRITE_DONE__
+-rw-r--r--    1     65536 Jan  1 00:20 mtd2_config_BootType3.bin
+START_MTD2_WRITE
+Unlocking Config ...
+Writing from mtd2_config_BootType3.bin to Config ...  [ ][e][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w][w]
+MTD2_WRITE_RET:0
+MTD2_SYNC_DONE
+__MTD2_WRITE_DONE__
+# 
