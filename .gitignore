@@ -1,3 +1,4 @@
 /toolchain/*
 !/toolchain/README.md
 /toolchain/uboot-mt7628-src/
+__pycache__/
