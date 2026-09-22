@@ -42,6 +42,8 @@ struct ap_info {
     u8 bssid[6];
     u8 channel;
     u8 ssid_len;
+    u8 has_signal;
+    int signal_dbm;
     char ssid[MAX_SSID + 1];
     u32 beacons;
     u32 probes;
@@ -300,6 +302,16 @@ static void append_dec(char *buffer, unsigned int *offset, unsigned int max, u32
     }
 }
 
+static void append_signed_dec(char *buffer, unsigned int *offset, unsigned int max, int value)
+{
+    if (value < 0) {
+        append_char(buffer, offset, max, '-');
+        append_dec(buffer, offset, max, (u32)(-value));
+    } else {
+        append_dec(buffer, offset, max, (u32)value);
+    }
+}
+
 static void append_mac_plain(char *buffer, unsigned int *offset, unsigned int max, const u8 *mac)
 {
     static const char hex[] = "0123456789abcdef";
@@ -502,7 +514,7 @@ static void rewrite_network_index(void)
     if (fd < 0)
         return;
     {
-        const char *header = "# bssid,channel,beacons,probes,data,essid\n";
+        const char *header = "# bssid,channel,signal_dbm,beacons,probes,data,essid\n";
         sys_write(fd, header, str_len(header));
     }
     for (index = 0; index < MAX_APS; index++) {
@@ -513,6 +525,11 @@ static void rewrite_network_index(void)
         append_mac_colon(line, &offset, sizeof(line), ap->bssid);
         append_char(line, &offset, sizeof(line), ',');
         append_dec(line, &offset, sizeof(line), ap->channel);
+        append_char(line, &offset, sizeof(line), ',');
+        if (ap->has_signal)
+            append_signed_dec(line, &offset, sizeof(line), ap->signal_dbm);
+        else
+            append_text(line, &offset, sizeof(line), "0");
         append_char(line, &offset, sizeof(line), ',');
         append_dec(line, &offset, sizeof(line), ap->beacons);
         append_char(line, &offset, sizeof(line), ',');
@@ -622,7 +639,7 @@ static void record_eapol(struct ap_info *ap, const u8 *frame, unsigned int frame
         save_handshake(ap);
 }
 
-static void handle_mgmt(const u8 *body, unsigned int length, u8 subtype)
+static void handle_mgmt(const u8 *body, unsigned int length, u8 subtype, int has_signal, int signal_dbm)
 {
     struct ap_info *ap;
     const u8 *bssid;
@@ -636,6 +653,10 @@ static void handle_mgmt(const u8 *body, unsigned int length, u8 subtype)
     ap = find_ap(bssid);
     if (!ap)
         return;
+    if (has_signal) {
+        ap->has_signal = 1;
+        ap->signal_dbm = signal_dbm;
+    }
     if (subtype == 8 || subtype == 5) {
         if (subtype == 8)
             ap->beacons++;
@@ -677,7 +698,7 @@ static const u8 *get_bssid_from_data(const u8 *body)
     return body + 16;
 }
 
-static void handle_data(const u8 *frame, unsigned int frame_length, const u8 *body, unsigned int length)
+static void handle_data(const u8 *frame, unsigned int frame_length, const u8 *body, unsigned int length, int has_signal, int signal_dbm)
 {
     const u8 *bssid;
     struct ap_info *ap;
@@ -693,8 +714,13 @@ static void handle_data(const u8 *frame, unsigned int frame_length, const u8 *bo
     if (is_broadcast(bssid) || !filter_accept_bssid(bssid))
         return;
     ap = find_ap(bssid);
-    if (ap)
+    if (ap) {
         ap->data++;
+        if (has_signal) {
+            ap->has_signal = 1;
+            ap->signal_dbm = signal_dbm;
+        }
+    }
 
     header_length = get_data_header_length(body, length);
     if (!header_length || length < header_length + 8)
@@ -708,6 +734,41 @@ static void handle_data(const u8 *frame, unsigned int frame_length, const u8 *bo
     }
 }
 
+static unsigned int align_offset(unsigned int offset, unsigned int alignment)
+{
+    return (offset + alignment - 1U) & ~(alignment - 1U);
+}
+
+static int radiotap_signal_dbm(const u8 *frame, unsigned int length, int *signal_dbm)
+{
+    u32 present;
+    unsigned int fields = 8;
+    unsigned int offset;
+    if (length < 8)
+        return 0;
+    present = (u32)frame[4] | ((u32)frame[5] << 8) | ((u32)frame[6] << 16) | ((u32)frame[7] << 24);
+    while (present & 0x80000000U) {
+        if (fields + 4 > length)
+            return 0;
+        present = (u32)frame[fields] | ((u32)frame[fields + 1] << 8) |
+                  ((u32)frame[fields + 2] << 16) | ((u32)frame[fields + 3] << 24);
+        fields += 4;
+    }
+    present = (u32)frame[4] | ((u32)frame[5] << 8) | ((u32)frame[6] << 16) | ((u32)frame[7] << 24);
+    if (!(present & (1U << 5)))
+        return 0;
+    offset = fields;
+    if (present & (1U << 0)) { offset = align_offset(offset, 8); offset += 8; }
+    if (present & (1U << 1)) offset += 1;
+    if (present & (1U << 2)) offset += 1;
+    if (present & (1U << 3)) { offset = align_offset(offset, 2); offset += 4; }
+    if (present & (1U << 4)) { offset = align_offset(offset, 2); offset += 2; }
+    if (offset >= length || offset >= ((u16)frame[2] | ((u16)frame[3] << 8)))
+        return 0;
+    *signal_dbm = frame[offset] >= 128 ? (int)frame[offset] - 256 : (int)frame[offset];
+    return 1;
+}
+
 static void handle_frame(const u8 *frame, unsigned int length)
 {
     u16 radiotap_length;
@@ -716,6 +777,8 @@ static void handle_frame(const u8 *frame, unsigned int length)
     u8 frame_control;
     u8 type;
     u8 subtype;
+    int signal_dbm = 0;
+    int has_signal;
 
     total_frames++;
     if (length < 12) {
@@ -723,6 +786,7 @@ static void handle_frame(const u8 *frame, unsigned int length)
         return;
     }
     radiotap_length = (u16)frame[2] | ((u16)frame[3] << 8);
+    has_signal = radiotap_signal_dbm(frame, length, &signal_dbm);
     if (radiotap_length >= length || radiotap_length < 8) {
         short_frames++;
         return;
@@ -738,12 +802,12 @@ static void handle_frame(const u8 *frame, unsigned int length)
     subtype = (frame_control >> 4) & 0x0f;
     if (type == 0) {
         mgmt_frames++;
-        handle_mgmt(body, body_length, subtype);
+        handle_mgmt(body, body_length, subtype, has_signal, signal_dbm);
     } else if (type == 1) {
         ctrl_frames++;
     } else if (type == 2) {
         data_frames++;
-        handle_data(frame, length, body, body_length);
+        handle_data(frame, length, body, body_length, has_signal, signal_dbm);
     }
 }
 

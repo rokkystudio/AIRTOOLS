@@ -797,6 +797,20 @@ static int handle_request(const char *path)
     }
     if (starts_with(path, "/set"))
         return apply_set_request(path);
+    if (starts_with(path, "/select")) {
+        status = apply_set_request(path);
+        if (status != 0) {
+            response_reset();
+            response_append("ERR select invalid\n");
+            return status;
+        }
+        stop_scan_hopper();
+        stop_airodump();
+        status = spawn_airodump();
+        response_reset();
+        response_append(status == 0 ? "OK select capture\n" : "ERR select capture\n");
+        return status;
+    }
     if (starts_with(path, "/scan/start")) {
         status = start_discovery_scan();
         response_append(status == 0 ? "OK scan start\n" : "ERR scan start\n");

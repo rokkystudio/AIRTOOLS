@@ -1,39 +1,37 @@
 # AIRTOOLS платформа
 
-Текущая архитектура управления AIRTOOLS: management AP `AT`, отдельный WN723N/RTL8188EUS в monitor mode, TCP control API и Android-клиент `D:\PROJECTS\AIRTOOLS-APP`.
+AIRTOOLS состоит из устройства на MT7628 с отдельным TP-Link WN723N/RTL8188EUS в monitor mode, management AP `AT`, TCP control API и Android-клиента `D:\PROJECTS\AIRTOOLS-APP`.
 
 ## Проверенная прошивка
 
-Последний физически проверенный образ:
+Текущий физически проверенный `mtd4`:
 
 ```text
-dumps\verified\mtd4_airtools_tcp_scan_20260922.bin
+dumps\verified\mtd4_airtools_auto_scan_rssi_20260922.bin
 size=3866624
-sha256=ab20813ee4bb9f58a96ec5c246431af901ec0249f3d645c17bcda74195d05673
+sha256=4de334944d27ac6fcf77a9de48d81308fbfc2a5137b4d14704b95e0c2e9e6e05
 ```
 
-Образ физически проверен: boot, management AP, TCP/8088, Android reconnect, SCAN, channel hopping и выдача найденных сетей.
+Проверено на реальном устройстве: boot, management AP, TCP/8088, автоматический discovery scan, channel hopping 1..13, RSSI из radiotap, сортировка Android по уровню сигнала, атомарный переход scan -> capture, фильтрация capture по BSSID/channel, возврат capture -> scan и восстановление экрана Android по `/status` после перезапуска приложения.
 
-Текущий TCP-кандидат:
+Текущий build output совпадает с проверенным образом:
 
 ```text
 dumps\modified\mtd4_base_connectivity_wn723n_autostart_airtools.bin
 size=3866624
-sha256=ab20813ee4bb9f58a96ec5c246431af901ec0249f3d645c17bcda74195d05673
+sha256=4de334944d27ac6fcf77a9de48d81308fbfc2a5137b4d14704b95e0c2e9e6e05
 ```
-
-Важно: Linux `SOCK_STREAM=1`, `SOCK_DGRAM=2`. Ошибочные значения блокировали работу нового TCP `/bin/airtools`; исправлено до сборки этого кандидата.
 
 ## Management network
 
-Management AP остается пользовательской точкой подключения. Android-приложение не вводит и не меняет пароль Wi-Fi.
+Management AP используется только как канал управления. Android не меняет его Wi-Fi конфигурацию.
 
 ```text
 service IP: 192.168.10.123
 control: TCP/8088
 ```
 
-IP и port являются внутренними параметрами и в пользовательском статусе Android не показываются.
+Android TCP sockets привязываются к физической Wi-Fi network с `NOT_VPN`, чтобы активный VPN телефона не перехватывал management traffic.
 
 ## TCP API
 
@@ -41,81 +39,78 @@ IP и port являются внутренними параметрами и в 
 
 ```text
 /status
-/set?mode=bssid&bssid=<mac>&channel=<n>
-/start
-/stop
 /scan/start
 /scan/stop
 /networks
+/select?bssid=<mac>&channel=<n>
+/set?mode=bssid&bssid=<mac>&channel=<n>
+/start
+/stop
 /handshakes
 /aireplay?mode=test&count=1
 ```
 
-`/set` только сохраняет target. Capture запускается только через `/start` и останавливается через `/stop`.
+Основной Android flow использует `/scan/start`, `/networks`, `/select`, `/status` и `/handshakes`. `/set`, `/start` и `/stop` остаются низкоуровневыми командами.
 
-`/status` возвращает состояние capture и discovery scan:
+`/select` выполняет переход режима на устройстве атомарно: сохраняет BSSID/channel, останавливает discovery hopper и discovery `airodump`, переводит `wlan0` на выбранный канал и запускает `airodump` с фильтром выбранного BSSID.
+
+`/status` возвращает фактический runtime state:
 
 ```text
 OK airtools=1 pid=<capture_pid> scan=<0|1> ?mode=<all|bssid>...&channel=<n>
 state_path=/tmp/airtools.state
 ```
 
-## Выбор Wi-Fi target
+При discovery `scan=1`, а capture pid в статусе равен 0. При target capture `scan=0`, `pid>0`, `mode=bssid`.
 
-Экран `SCAN` запускает `/scan/start`. Во время discovery WN723N переключается по каналам 1..13, а `airodump` накапливает найденные AP.
+## Discovery scan и RSSI
+
+Discovery запускает один `airodump 0 all`. Monitor mode включается один раз, после чего отдельный hopper переключает `wlan0` по каналам 1..13 через `iwconfig`, не пересоздавая monitor interface.
 
 Runtime index:
 
 ```text
 /tmp/airscan-networks.txt
-# bssid,channel,beacons,probes,data,essid
+# bssid,channel,signal_dbm,beacons,probes,data,essid
 ```
 
-`/networks` возвращает список. После выбора AP Android вызывает `/scan/stop`, сохраняет BSSID/channel/ESSID и возвращается на главный экран.
+`signal_dbm` извлекается из radiotap `DBM_ANTSIGNAL`. Android сортирует AP по RSSI от более сильного к более слабому; при одинаковом/неизвестном RSSI используются счётчики кадров и ESSID.
 
-## Capture
+## Android flow
 
-Главный экран имеет одну кнопку `START/STOP`.
+Отдельного экрана `SCAN`, кнопки `SCAN` и кнопки `START/STOP` больше нет.
 
-`START` выполняет:
+После запуска приложение автоматически запрашивает `/status`. Если устройство сканирует, показывается список Wi-Fi сетей. Если уже идёт target capture, сразу показывается выбранная сеть. Idle с сохранённым BSSID возобновляет capture, а idle без target запускает discovery scan.
+
+Во время scan список обновляется автоматически. Каждая строка показывает ESSID, BSSID, канал, Beacon/Data и RSSI в dBm. Сети отсортированы по RSSI.
+
+Нажатие на сеть сразу вызывает `/select`; отдельный START не нужен. После успешного перехода Android показывает только выбранную сеть и live capture details: BSSID, channel, RSSI, Beacon/Probe/Data counters и состояние WPA handshake.
+
+Кнопка Back в верхней панели вызывает `/scan/start`, то есть реально переводит устройство обратно из target capture в discovery scan и возвращает Android к списку сетей.
+
+Выход из Android приложения не меняет режим устройства. При следующем запуске экран восстанавливается по фактическому `/status`, а не по предположению Android.
+
+Connection status намеренно простой: зелёный только при успешном `/status`; подключение и недоступность устройства отображаются серым. Кратковременный единичный TCP failure после уже установленной связи не переключает UI в unavailable — требуется несколько последовательных ошибок.
+
+## Capture и handshake storage
+
+При выбранной сети `airodump` работает как:
 
 ```text
-/set?mode=bssid&bssid=<selected>&channel=<selected>
-/start
+airodump 0 bssid <selected-bssid> channel <selected-channel>
 ```
 
-`STOP` выполняет `/stop`. Capture не стартует автоматически при запуске `/bin/airtools`.
-
-## Handshake storage
+Handshake storage:
 
 ```text
 /tmp/airhs
 /tmp/airhs/index.txt
 ```
 
-Один BSSID хранит один последний handshake PCAP. Новый handshake заменяет предыдущий для того же BSSID. Storage находится в `/tmp` и не переживает power cycle. `/handshakes` возвращает текущий index. Передача самого `.pcap` через control API еще не реализована.
+Один BSSID хранит один последний handshake PCAP. Новый handshake заменяет предыдущий для того же BSSID. `/handshakes` возвращает index; Android показывает live состояние handshake на экране выбранной сети. Передача самого `.pcap` через control API пока не реализована.
 
-## Android client
+## Flash safety
 
-Проект: `D:\PROJECTS\AIRTOOLS-APP`.
+Обычные firmware изменения относятся только к `Kernel/mtd4`. Без отдельного решения нельзя писать `mtd1` Bootloader, `mtd2` Config и `mtd3` Factory.
 
-Текущее поведение:
-
-- TCP client вместо UDP;
-- `/status` автоматически проверяется примерно раз в секунду;
-- отдельной кнопки `REFRESH` нет;
-- приложение автоматически восстанавливает TCP-связь;
-- TCP sockets привязываются к физической Wi-Fi network (`NOT_VPN`), чтобы активный Android VPN не перехватывал management traffic;
-- IP/port в пользовательском статусе не показываются;
-- статус: цветной круг + короткая строка;
-- зеленый — `Устройство подключено`;
-- желтый — `Подключение к устройству`;
-- красный — `Ошибка подключения`;
-- серый — `Сервер недоступен`;
-- Wi-Fi password/config UI отсутствует;
-- `SCAN` открывает экран выбора target AP;
-- `START/STOP` — одна stateful-кнопка;
-- выбранный BSSID/channel/ESSID сохраняется локально на Android;
-- верхняя панель использует launcher icon AIRTOOLS, light/dark и RU/EN controls.
-
-`assembleDebug` проходит. Полная end-to-end проверка нового TCP API требует физической проверки нового `mtd4` candidate.
+Перед reboot после flash нужно проверить содержимое записанного `mtd4`; для текущего образа физическая проверка дала `FLASH_OK`.

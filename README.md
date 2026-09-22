@@ -19,9 +19,9 @@
 Прошитый рабочий образ:
 
 ```text
-dumps\verified\mtd4_airtools_tcp_scan_20260922.bin
+dumps\verified\mtd4_airtools_auto_scan_rssi_20260922.bin
 size:   3866624
-sha256: ab20813ee4bb9f58a96ec5c246431af901ec0249f3d645c17bcda74195d05673
+sha256: 4de334944d27ac6fcf77a9de48d81308fbfc2a5137b4d14704b95e0c2e9e6e05
 ```
 
 Устройство после загрузки:
