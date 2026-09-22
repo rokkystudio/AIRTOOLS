@@ -1,146 +1,92 @@
 # ENDOSCOPE
 
-Проект исследования и модификации Wi-Fi эндоскопа на MT7628.
+Рабочий репозиторий по исследованию и модификации Wi-Fi эндоскопа на MT7628.
 
-## Документация
+## Главные документы
 
-- [DEVICE.md](DEVICE.md) — характеристики конкретного экземпляра.
-- [SYSTEM.md](SYSTEM.md) — общая карта Linux и прошивки.
-- [FIRMWARE.md](FIRMWARE.md) — сборка, RAM test boot, flash и recovery.
-- [CREDS.md](CREDS.md) — данные доступа и восстановление Telnet.
-- [TONY.md](TONY.md) — заметки по внешней статье о похожем устройстве.
+- [DEVICE.md](DEVICE.md) - паспорт платы и текущее состояние проекта.
+- [FIRMWARE.md](FIRMWARE.md) - сборка и прошивка текущего `mtd4`.
+- [BRICK.md](BRICK.md) - как не закирпичить устройство, flash safety и recovery.
+- [MONITOR.md](MONITOR.md) - актуальная monitor-архитектура: MT7628 AP + WN723N/RTL8188EUS monitor.
+- [AIRTOOLS.md](AIRTOOLS.md) - текущая airtools-платформа, UDP API, Wi-Fi config и handshake storage.
+- [TODO.md](TODO.md) - незакрытые задачи и критерии готовности.
+- [ARTIFACTS.md](ARTIFACTS.md) - сохранённые бинарники, драйверы и проверенные firmware artifacts.
+
+Заводской Linux/software inventory лежит в [SYSTEM.md](SYSTEM.md). Доступы и Telnet-пароли отдельно: [CREDS.md](CREDS.md).
+
+## Текущее рабочее состояние
+
+Прошитый рабочий образ:
+
+```text
+dumps\verified\mtd4_at_wpa2_airtools_wn723n_20260920.bin
+size:   3866624
+sha256: 7443772442fbbc038305f75659d8b628b319b1da73f99f699a43904f8271124d
+```
+
+Устройство после загрузки:
+
+```text
+SSID: AT
+Security: WPA2-Personal / CCMP
+Password: 12345678
+BSSID: e8:ab:fa:ae:6e:a1
+Channel: 11
+IP: 192.168.10.123
+```
+
+Проверено:
+
+```text
+boot OK
+ping 192.168.10.123 OK
+TCP 23 open
+TCP 80 open
+8188eu loaded
+mt_wifi loaded
+ra1 = AP/control
+wlan0 = monitor, type 803
+airtools UDP/8088 responds
+```
 
 ## Структура проекта
 
 ```text
 dumps\
-  original\                 неизменяемые заводские flash/MTD dumps
-  modified\                 готовые модифицированные partition images
+  original\                 заводские/recovery dumps, не перезаписывать
+  bases\                    стабильные base images для пересборки
+  verified\                 проверенные прошитые images
 
-services\connectivity\      исходник и сборка локального DNS/HTTP daemon
-toolchain\llvm\             MIPS cross compilation
-toolchain\lzma920\          legacy LZMA encoder/decoder
-scripts\                     build, UART, recovery
-agent\                       Telnet automation
-images\                      фотографии платы
-hashcat\                     сохранённые hashcat-файлы
+artifacts\                  сохранённые бинарники, драйверы, Windows helpers
+src\airtools\               исходники airtools/airodump/aireplay/runtime helpers
+src\connectivity\           исходники и builder connectivity firmware
+src\monitor\                старый ra1/ra0 monitor helper
+external\                   сохраненный Linux archive и локальные сторонние исходники
+toolchain\                  минимальный LLVM, LZMA 9.20 и U-Boot source
+scripts\build\              firmware/tool builders
+scripts\uart\               UART connect, RAM boot, recovery
+scripts\wifi\               Wi-Fi/Telnet convenience helpers
+scripts\tftp\               TFTP serving helpers
+scripts\recovery\           CH341A recovery helpers
+tools\CH341\               CH341A software, drivers and reference photos
+scripts\telnet\             Telnet helpers and local config
+images\                     фотографии платы
 ```
 
-## Заводской backup
+## Жесткое правило flash
+
+Без отдельного решения не писать:
 
 ```text
-dumps\original\flash_full_mtd0.bin
-dumps\original\mtd1_bootloader.bin
-dumps\original\mtd2_config.bin
-dumps\original\mtd3_factory.bin
-dumps\original\mtd4_kernel.bin
+mtd1 Bootloader
+mtd2 Config
+mtd3 Factory
 ```
 
-`dumps\original` не должен изменяться сборочными или flash-скриптами.
-
-## Сборка modified firmware
-
-```powershell
-scripts\build-firmware.bat
-```
-
-Сборка выполняет:
-
-1. MIPS-компиляцию `endoscope-connectivity`;
-2. сборку `mtd4_connectivity.bin`;
-3. обязательный firmware preflight.
-
-Успешный результат должен содержать:
+Обычная рабочая модификация сейчас находится только в:
 
 ```text
-PRELIGHT OK
+mtd4 Kernel/rootfs
 ```
 
-Готовый образ:
-
-```text
-dumps\modified\mtd4_connectivity.bin
-```
-
-## Безопасный порядок обновления
-
-Новый modified image **не записывается сразу во flash**.
-
-Сначала обязательный RAM-only boot:
-
-```powershell
-python scripts\uart-test-boot.py --image dumps\modified\mtd4_connectivity.bin --boot
-```
-
-U-Boot загружает uImage по UART в RAM и выполняет `bootm`. SPI flash этим тестом не изменяется.
-
-Только после успешного RAM boot и проверки нужных сервисов допускается запись `mtd4`.
-
-Подробно: [FIRMWARE.md](FIRMWARE.md).
-
-## UART recovery
-
-Параметры:
-
-```text
-COM3
-57600 8N1
-flow control: none
-```
-
-Подключение:
-
-```text
-CP2102 GND -> GND
-CP2102 RXD -> T
-CP2102 TXD -> R
-питание с CP2102 не подключать
-```
-
-Загрузка заводской прошивки только в RAM:
-
-```powershell
-python scripts\uart-test-boot.py --image dumps\original\mtd4_kernel.bin --boot
-```
-
-Это основной recovery-путь перед любой постоянной записью.
-
-## Wi-Fi / Telnet
-
-После нормальной загрузки системы:
-
-```powershell
-scripts\connect-endoscope-wifi.bat
-```
-
-Одна Telnet-команда:
-
-```powershell
-agent\run-endoscope-telnet-command.bat "cat /proc/cpuinfo"
-```
-
-Локальные параметры Telnet находятся в:
-
-```text
-agent\endoscope-telnet.local.ps1
-```
-
-## UART terminal
-
-```powershell
-scripts\connect-endoscope-uart.bat
-```
-
-Для другого COM-порта:
-
-```powershell
-scripts\connect-endoscope-uart.bat COM4
-```
-
-## Текущий recovery
-
-Текущий flash `mtd4` содержит предыдущую тестовую сборку, которую U-Boot не может распаковать.
-
-Причина определена: внешний LZMA stream был создан в формате с неизвестным unpacked size. Исправленная сборка использует legacy LZMA SDK 9.20 и проходит обязательный preflight.
-
-Recovery выполняется через UART с заводским `dumps\original\mtd4_kernel.bin`, загружаемым сначала только в RAM.
+Перед любой записью во flash читать [BRICK.md](BRICK.md).

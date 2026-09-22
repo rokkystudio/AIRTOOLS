@@ -1,0 +1,53 @@
+#!/bin/sh
+CMD="$1"
+SSID="$2"
+PASS="$3"
+
+valid_alnum() {
+    case "$1" in
+        "") return 1 ;;
+        *[!A-Za-z0-9]*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+apply_wifi() {
+    ssid_len=`expr length "$SSID"`
+    pass_len=`expr length "$PASS"`
+
+    valid_alnum "$SSID" || exit 11
+    valid_alnum "$PASS" || exit 12
+    [ "$ssid_len" -ge 1 ] || exit 13
+    [ "$ssid_len" -le 32 ] || exit 14
+    [ "$pass_len" -ge 8 ] || exit 15
+    [ "$pass_len" -le 63 ] || exit 16
+
+    echo "ssid=$SSID" > /tmp/airwifi.state
+    echo "pass_len=$pass_len" >> /tmp/airwifi.state
+    echo "auth=WPA2PSK" >> /tmp/airwifi.state
+
+    config_save.sh ssid "$SSID" >/dev/null 2>&1
+    config_save.sh passwd "$PASS" >/dev/null 2>&1
+
+    iwpriv ra1 set SSID="$SSID" >/dev/null 2>&1
+    iwpriv ra1 set AuthMode=WPA2PSK >/dev/null 2>&1
+    iwpriv ra1 set EncrypType=AES >/dev/null 2>&1
+    iwpriv ra1 set WPAPSK="$PASS" >/dev/null 2>&1
+
+    echo "OK ssid=$SSID pass_len=$pass_len" >> /tmp/airwifi.state
+    exit 0
+}
+
+case "$CMD" in
+    apply-delayed)
+        sleep 1
+        apply_wifi
+        ;;
+    apply)
+        apply_wifi
+        ;;
+    *)
+        echo "Usage: /bin/airwifi {apply|apply-delayed} <ssid> <password>"
+        exit 1
+        ;;
+esac

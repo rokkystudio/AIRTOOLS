@@ -1,0 +1,8 @@
+--- src/lib_mips/board.c
++++ src/lib_mips/board.c
+@@
+-	unsigned char BootType='3', confirm=0;
++	unsigned char BootType='4', confirm=0; /* patched: default to CLI, not flash boot */
+@@
+-					BootType = '3';
++					BootType = '4'; /* patched: invalid menu input falls back to CLI */

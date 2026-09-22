@@ -1,6 +1,0 @@
-
-# echo __HEX_BEGIN__; od -An -v -tx1 /dev/mtd2ro; echo __HEX_END__
-__HEX_BEGIN__
-/bin/sh: od: not found
-__HEX_END__
-# 

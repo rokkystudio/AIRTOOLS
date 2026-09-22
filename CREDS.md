@@ -17,7 +17,7 @@ password: molinkad
 Подключение:
 
 ``powershell
-D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-wifi.bat
+D:\PROJECTS\ENDOSCOPE\scripts\wifi\connect-wifi.bat
 ``
 
 ### UART напрямую
@@ -34,13 +34,13 @@ prompt: #
 Подключение:
 
 ``powershell
-D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-uart.bat
+D:\PROJECTS\ENDOSCOPE\scripts\uart\connect-uart.bat
 ``
 
 Для другого COM-порта:
 
 ``powershell
-D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-uart.bat COM4
+D:\PROJECTS\ENDOSCOPE\scripts\uart\connect-uart.bat COM4
 ``
 
 ## Hash из /etc/passwd

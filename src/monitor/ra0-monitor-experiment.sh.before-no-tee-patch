@@ -1,0 +1,91 @@
+#!/bin/sh
+# ENDOSCOPE ra0 monitor-mode experiment helper.
+# Runtime-only: writes only to /tmp, does not call nvram_set/flash/mtd_write/config_save.
+# ra1 is the active AP; this helper never changes ra1 mode.
+
+LOG=/tmp/ra0-monitor-experiment.log
+WD=/tmp/ra0-monitor-watchdog.pid
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null)] $*" | tee -a "$LOG"
+}
+
+snapshot() {
+    log "=== snapshot start ==="
+    echo "--- /proc/mtd ---" | tee -a "$LOG"; cat /proc/mtd 2>&1 | tee -a "$LOG"
+    echo "--- ifconfig -a ---" | tee -a "$LOG"; ifconfig -a 2>&1 | tee -a "$LOG"
+    echo "--- iwconfig ---" | tee -a "$LOG"; iwconfig 2>&1 | tee -a "$LOG"
+    echo "--- iwpriv ra0 ---" | tee -a "$LOG"; iwpriv ra0 2>&1 | tee -a "$LOG"
+    echo "--- iwpriv ra1 ---" | tee -a "$LOG"; iwpriv ra1 2>&1 | tee -a "$LOG"
+    echo "--- modules ---" | tee -a "$LOG"; cat /proc/modules 2>&1 | tee -a "$LOG"
+    log "=== snapshot end ==="
+}
+
+watchdog_start() {
+    sec=${1:-60}
+    if [ -f "$WD" ]; then
+        old=$(cat "$WD" 2>/dev/null)
+        [ -n "$old" ] && kill "$old" 2>/dev/null
+        rm -f "$WD"
+    fi
+    (sleep "$sec"; reboot) >/dev/null 2>&1 &
+    echo $! > "$WD"
+    log "watchdog armed: reboot in ${sec}s pid=$(cat "$WD")"
+}
+
+watchdog_cancel() {
+    if [ -f "$WD" ]; then
+        pid=$(cat "$WD" 2>/dev/null)
+        [ -n "$pid" ] && kill "$pid" 2>/dev/null
+        rm -f "$WD"
+        log "watchdog cancelled"
+    else
+        log "watchdog not armed"
+    fi
+}
+
+try_ra0_monitor() {
+    if [ "$1" != "--yes" ]; then
+        echo "This changes ra0 runtime state only. It should not touch flash, nvram, or ra1."
+        echo "Run: $0 try-ra0-monitor --yes"
+        exit 2
+    fi
+    log "try-ra0-monitor begin"
+    snapshot
+    watchdog_start 90
+    log "bringing ra0 up"
+    ifconfig ra0 up 2>&1 | tee -a "$LOG"
+    log "trying iwpriv MonitorMode variants on ra0 only"
+    iwpriv ra0 set MonitorMode=2 2>&1 | tee -a "$LOG"
+    iwpriv ra0 set MonitorMode=1 2>&1 | tee -a "$LOG"
+    log "trying iwconfig ra0 mode monitor"
+    iwconfig ra0 mode monitor 2>&1 | tee -a "$LOG"
+    log "post-check ra0/ra1"
+    ifconfig ra0 2>&1 | tee -a "$LOG"
+    iwconfig ra0 2>&1 | tee -a "$LOG"
+    ifconfig ra1 2>&1 | tee -a "$LOG"
+    iwconfig ra1 2>&1 | tee -a "$LOG"
+    log "If AP/video/telnet are still alive, run: $0 cancel-watchdog"
+    log "try-ra0-monitor end"
+}
+
+restore_ra0_runtime() {
+    log "restore-ra0-runtime begin"
+    iwconfig ra0 mode managed 2>&1 | tee -a "$LOG"
+    ifconfig ra0 down 2>&1 | tee -a "$LOG"
+    watchdog_cancel
+    log "restore-ra0-runtime end"
+}
+
+case "$1" in
+    inspect|snapshot|"") snapshot ;;
+    watchdog-start) watchdog_start "$2" ;;
+    cancel-watchdog) watchdog_cancel ;;
+    try-ra0-monitor) shift; try_ra0_monitor "$1" ;;
+    restore-ra0) restore_ra0_runtime ;;
+    *)
+        echo "Usage: $0 [inspect|watchdog-start [sec]|cancel-watchdog|try-ra0-monitor --yes|restore-ra0]"
+        echo "Log: $LOG"
+        exit 2
+        ;;
+esac

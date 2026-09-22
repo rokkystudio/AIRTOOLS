@@ -2,5 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/ac85p-asuswrt-tools" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/rtl8188eus" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/toolchain/uboot-mt7628-src" vcs="Git" />
   </component>
 </project>

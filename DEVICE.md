@@ -1,23 +1,52 @@
-﻿# ENDOSCOPE: характеристики нашего устройства
+# ENDOSCOPE: Устройство И Текущее Состояние
 
-Этот файл содержит только то, что было получено на нашем экземпляре через фото, UART, Windows/USB/Wi-Fi проверки и сохранённый дамп flash.
+Паспорт конкретной платы и актуальное состояние проекта.
 
-## Источники внутри проекта
+## Текущее Состояние
 
-### Фото платы
+Устройство рабочее. Прошитый образ:
 
-Нажать на превью, чтобы открыть оригинальный файл.
+```text
+dumps\verified\mtd4_at_wpa2_airtools_wn723n_20260920.bin
+size:   3866624
+sha256: 7443772442fbbc038305f75659d8b628b319b1da73f99f699a43904f8271124d
+```
 
-<p>
-  <a href="images/1789499849818.jpg"><img src="images/1789499849818.jpg" alt="1789499849818.jpg" width="240"></a>
-  <a href="images/1789489367549.jpg"><img src="images/1789489367549.jpg" alt="1789489367549.jpg" width="240"></a>
-  <a href="images/1789487224948.jpg"><img src="images/1789487224948.jpg" alt="1789487224948.jpg" width="240"></a>
-  <a href="images/1789487224941.jpg"><img src="images/1789487224941.jpg" alt="1789487224941.jpg" width="240"></a>
-</p>
+Management AP:
 
-### Системная информация
+```text
+SSID: AT
+Authentication: WPA2-Personal
+Cipher: CCMP
+Password: 12345678
+BSSID: e8:ab:fa:ae:6e:a1
+Channel: 11
+IP: 192.168.10.123
+```
 
-- [Linux system inventory](SYSTEM.md)
+Проверено после прошивки:
+
+```text
+boot OK
+ping 192.168.10.123 OK
+TCP 23 open
+TCP 80 open
+8188eu loaded
+mt_wifi loaded
+ra1 = AP/control
+wlan0 = monitor, type 803
+airtools UDP/8088 responds
+```
+
+Оригинальный bootloader восстановлен:
+
+```text
+dumps\original\mtd1_bootloader.bin
+size:   196608
+sha256: 9012c77628e5a7724d7fea2641399978089445cfc655671ee872741725ca31b6
+```
+
+Не писать `mtd1/mtd2/mtd3` без отдельного решения. Практические правила flash/recovery: [BRICK.md](BRICK.md).
 
 ## Плата
 
@@ -28,11 +57,23 @@ ML-7066 REV:3.0
 2018-10-18
 ```
 
-Все фотографии перечислены выше в разделе [Фото платы](#фото-платы). Превью кликабельные и ведут на оригинальные `.jpg`.
+Фотографии:
 
-## Test pads и UART
+<table>
+  <tr>
+    <td align="center"><a href="images/1789899357000.jpg"><img src="images/1789899357000.jpg" width="240"></a><br><sub><code>1789899357000.jpg</code></sub></td>
+    <td align="center"><a href="images/1789901537903.jpg"><img src="images/1789901537903.jpg" width="240"></a><br><sub><code>1789901537903.jpg</code></sub></td>
+    <td align="center"><a href="images/1789901537912.jpg"><img src="images/1789901537912.jpg" width="240"></a><br><sub><code>1789901537912.jpg</code></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="images/1789901537920.jpg"><img src="images/1789901537920.jpg" width="240"></a><br><sub><code>1789901537920.jpg</code></sub></td>
+    <td align="center"><a href="images/1789901537927.jpg"><img src="images/1789901537927.jpg" width="240"></a><br><sub><code>1789901537927.jpg</code></sub></td>
+  </tr>
+</table>
 
-Найденные площадки:
+## UART
+
+Test pads:
 
 ```text
 GND          земля
@@ -51,54 +92,18 @@ CP2102 TXD -> R на плате
 Питание 5V/3V3 с CP2102 не подключать
 ```
 
-Параметры UART:
+Параметры:
 
 ```text
 COM3, 57600 8N1, flow control: none
+prompt: #
 ```
 
-Подключение:
+UART даёт shell без штатного Telnet-входа.
 
-```powershell
-D:\PROJECTS\ENDOSCOPE\scripts\connect-endoscope-uart.bat
-```
+## Hardware / Boot
 
-## USB
-
-USB-подключение самого эндоскопа к Windows не дало нового PnP-устройства. По результату этой проверки USB не рассматривается как подтверждённый data-интерфейс.
-
-CP2102 USB-UART определился отдельно как:
-
-```text
-Silicon Labs CP210x USB to UART Bridge (COM3)
-VID_10C4&PID_EA60
-```
-
-## Wi-Fi и сеть
-
-Наш компьютер был подключен к AP устройства:
-
-```text
-SSID: ENDOSCOPE
-PC IP: 192.168.10.36/24
-device/gateway IP: 192.168.10.123
-BSSID/MAC: E8:AB:FA:AE:6E:A1
-channel: 11
-```
-
-ARP подтвердил устройство по адресу `192.168.10.123` с MAC `E8-AB-FA-AE-6E-A1`.
-
-Проверенные TCP-порты:
-
-```text
-23/tcp   open    Telnet, banner: MoLink login:
-7060/tcp open    app_cam video stream server
-22/tcp   closed  SSH недоступен
-```
-
-## Boot / UART
-
-Из UART boot output нашего устройства:
+Из UART boot output:
 
 ```text
 U-Boot 1.1.3 (Aug  9 2018 - 17:34:36)
@@ -108,41 +113,16 @@ ASIC 7628_MP
 CPU freq = 580 MHZ
 find flash: W25Q32BV
 BusyBox v1.23.0 (2018-03-30 18:02:20 CST)
-starting pid 249, tty '/dev/ttyS1': '/bin/sh'
 ```
 
-После загрузки через UART доступен shell prompt:
-
-```text
-#
-```
-
-UART даёт shell без штатного Telnet-входа.
-
-## Linux
-
-CPU из `/proc/cpuinfo`:
+CPU:
 
 ```text
 system type : MT7628
 cpu model   : MIPS 24Kc V5.5
 ```
 
-Процессы, которые видели в `ps`, включали:
-
-```text
-init
-nvram_daemon
-app_detect
-app_cam
-udhcpd /etc_ro/udhcpd.conf
-telnetd
-/bin/sh
-```
-
-## Flash
-
-SPI flash из boot log:
+SPI flash:
 
 ```text
 model: W25Q32BV
@@ -151,7 +131,7 @@ device id: 40 16
 size: 4 MiB
 ```
 
-Разметка flash из `/proc/mtd`:
+Flash layout:
 
 | dev  | size     | erasesize | name       |
 |------|----------|-----------|------------|
@@ -165,34 +145,29 @@ Mount layout:
 
 ```text
 rootfs on / type rootfs (rw)
-proc on /proc type proc (rw,relatime)
-none on /var type ramfs (rw,relatime)
-none on /dev type ramfs (rw,relatime)
-none on /etc type ramfs (rw,relatime)
-none on /tmp type ramfs (rw,relatime)
-none on /media type ramfs (rw,relatime)
-none on /sys type sysfs (rw,relatime)
+none on /var type ramfs
+none on /dev type ramfs
+none on /etc type ramfs
+none on /tmp type ramfs
+none on /media type ramfs
 ```
 
-Вывод: изменения в `/etc`, `/tmp`, `/var`, `/dev`, `/media` не нужно считать постоянными без отдельной проверки механизма сохранения во flash.
+Вывод: `/etc`, `/tmp`, `/var`, `/dev`, `/media` не являются persistence storage без отдельного механизма сохранения.
 
-## Дамп flash
+## Заводские Дампы
 
-Полный дамп SPI flash снят через Wi-Fi: Telnet используется для запуска `busybox tcpsvd`, а Windows принимает raw-поток `/dev/mtd0` по TCP.
+```text
+dumps\original\flash_full_mtd0.bin   size=4194304 sha256=C11AD67DE1A32884BE18A00655CAA75FE0CB883520F1F422A629009DA72E3967
+dumps\original\mtd1_bootloader.bin   size=196608  sha256=9012C77628E5A7724D7FEA2641399978089445CFC655671EE872741725CA31B6
+dumps\original\mtd2_config.bin       size=65536   sha256=19F1E55B1DC8E23DFC9DC94A5343EA05EC6352464F7BFF99C76ADBF9EA78E607
+dumps\original\mtd3_factory.bin      size=65536   sha256=62755F6E645C3C0F7D20BD348D11AC7668A2C2254DE4AA325298EA808F86B0CD
+dumps\original\mtd4_kernel.bin       size=3866624 sha256=72904FD990D724D81CF2EBD3C1E812954C55422442D16CAB7C0E152FF3610C2D
+```
 
-- [Полный flash, mtd0](dumps/original/flash_full_mtd0.bin) — 4194304 bytes, SHA256 `C11AD67DE1A32884BE18A00655CAA75FE0CB883520F1F422A629009DA72E3967`
-- [Bootloader, mtd1](dumps/original/mtd1_bootloader.bin) — offset `0x000000`, size `0x030000`, SHA256 `9012C77628E5A7724D7FEA2641399978089445CFC655671EE872741725CA31B6`
-- [Config, mtd2](dumps/original/mtd2_config.bin) — offset `0x030000`, size `0x010000`, SHA256 `19F1E55B1DC8E23DFC9DC94A5343EA05EC6352464F7BFF99C76ADBF9EA78E607`
-- [Factory, mtd3](dumps/original/mtd3_factory.bin) — offset `0x040000`, size `0x010000`, SHA256 `62755F6E645C3C0F7D20BD348D11AC7668A2C2254DE4AA325298EA808F86B0CD`
-- [Kernel, mtd4](dumps/original/mtd4_kernel.bin) — offset `0x050000`, size `0x3B0000`, SHA256 `72904FD990D724D81CF2EBD3C1E812954C55422442D16CAB7C0E152FF3610C2D`
+`dumps\original\` не перезаписывать. Проверенные modified images лежат в `dumps\verified\`; временный output сборки идет в `dumps\modified\`.
 
-`dumps\original\` содержит неизменяемые заводские recovery-дампы. Готовые модифицированные partition images хранятся отдельно в `dumps\modified\`.
-
-## Что остаётся проверить
+## Что Ещё Проверить
 
 - Механизм постоянного сохранения настроек во flash.
 - Назначение `SDA`/`CLK`.
-- Есть ли полноценный USB data-интерфейс.
-
-
-
+- Есть ли полноценный USB data-интерфейс самого эндоскопа.

@@ -1,0 +1,107 @@
+#!/bin/sh
+# ENDOSCOPE ra0 monitor-mode experiment helper.
+# Runtime-only: no nvram/config_save/mtd writes.
+# ra1 is the active AP; this helper never changes ra1 mode.
+
+LOG=/tmp/ra0-monitor-experiment.log
+WD=/tmp/ra0-monitor-watchdog.pid
+TMP=/tmp/ra0-monitor-command.out
+
+stamp() { date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo no-date; }
+
+log() {
+    line="[$(stamp)] $*"
+    echo "$line"
+    echo "$line" >> "$LOG"
+}
+
+section() {
+    echo "--- $* ---"
+    echo "--- $* ---" >> "$LOG"
+}
+
+run_sh() {
+    log "RUN $*"
+    rm -f "$TMP"
+    sh -c "$*" > "$TMP" 2>&1
+    rc=$?
+    cat "$TMP" 2>/dev/null
+    cat "$TMP" >> "$LOG" 2>/dev/null
+    log "RC $rc"
+    return $rc
+}
+
+inspect() {
+    : > "$LOG"
+    log "inspect begin"
+    section "/proc/mtd"; run_sh 'cat /proc/mtd'
+    section "/proc/net/dev"; run_sh 'cat /proc/net/dev'
+    section "ifconfig -a"; run_sh 'ifconfig -a'
+    section "iwconfig ra0"; run_sh 'iwconfig ra0'
+    section "iwconfig ra1"; run_sh 'iwconfig ra1'
+    section "iwpriv ra0"; run_sh 'iwpriv ra0'
+    section "iwpriv ra1"; run_sh 'iwpriv ra1'
+    section "ps"; run_sh 'ps'
+    log "inspect end"
+}
+
+watchdog_start() {
+    sec="$1"
+    [ -n "$sec" ] || sec=90
+    cancel_watchdog >/dev/null 2>&1
+    log "watchdog start ${sec}s"
+    (sleep "$sec"; reboot) &
+    echo $! > "$WD"
+    log "watchdog pid $(cat "$WD" 2>/dev/null)"
+}
+
+cancel_watchdog() {
+    if [ -f "$WD" ]; then
+        pid=$(cat "$WD" 2>/dev/null)
+        [ -n "$pid" ] && kill "$pid" 2>/dev/null
+        rm -f "$WD"
+        log "watchdog canceled"
+    fi
+}
+
+try_ra0_monitor() {
+    if [ "$1" != "--yes" ]; then
+        echo "This changes ra0 runtime state only. It should not touch flash, nvram, or ra1."
+        echo "Run: $0 try-ra0-monitor --yes"
+        return 2
+    fi
+    : > "$LOG"
+    log "try-ra0-monitor begin"
+    watchdog_start 90
+    section "pre ra0"; run_sh 'ifconfig ra0; iwconfig ra0'
+    section "pre ra1"; run_sh 'ifconfig ra1; iwconfig ra1'
+    log "bringing ra0 up"
+    run_sh 'ifconfig ra0 up'
+    section "try iwconfig monitor"; run_sh 'iwconfig ra0 mode monitor'
+    section "try iwpriv MonitorMode=2"; run_sh 'iwpriv ra0 set MonitorMode=2'
+    section "try iwpriv MonitorMode=1"; run_sh 'iwpriv ra0 set MonitorMode=1'
+    section "post ra0"; run_sh 'ifconfig ra0; iwconfig ra0'
+    section "post ra1"; run_sh 'ifconfig ra1; iwconfig ra1'
+    cancel_watchdog
+    log "try-ra0-monitor end"
+}
+
+restore_ra0_runtime() {
+    log "restore-ra0-runtime begin"
+    run_sh 'iwconfig ra0 mode managed'
+    run_sh 'ifconfig ra0 down'
+    section "restored ra0"; run_sh 'ifconfig ra0; iwconfig ra0'
+    log "restore-ra0-runtime end"
+}
+
+case "$1" in
+    inspect) inspect ;;
+    watchdog-start) shift; watchdog_start "$1" ;;
+    cancel-watchdog) cancel_watchdog ;;
+    try-ra0-monitor) shift; try_ra0_monitor "$1" ;;
+    restore-ra0) restore_ra0_runtime ;;
+    *)
+        echo "Usage: $0 [inspect|watchdog-start [sec]|cancel-watchdog|try-ra0-monitor --yes|restore-ra0]"
+        exit 2
+        ;;
+esac

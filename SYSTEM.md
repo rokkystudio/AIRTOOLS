@@ -295,19 +295,27 @@ dumps/
 - [FIRMWARE.md](FIRMWARE.md)
 - [README.md](README.md)
 
-## Модифицированный образ
+## Модифицированные образы
 
 Разделы выше описывают возможности и состав заводской прошивки.
 
-Текущая modified-сборка `dumps\modified\mtd4_connectivity.bin` предназначена для режима Wi-Fi AP без эндоскопа и удаляет из rootfs:
+Ранняя modified-сборка `dumps\modified\mtd4_connectivity.bin` была предназначена для режима Wi-Fi AP без эндоскопа и удаляла из rootfs:
 
 - `app_cam`;
 - старый `app_detect`;
 - `video_ko.sh`;
 - UVC/V4L2 video modules.
 
-Вместо них добавлен небольшой `/bin/endoscope-connectivity`, который обслуживает локальные DNS/HTTP connectivity checks телефона.
+Вместо них был добавлен небольшой `/bin/endoscope-connectivity`, который обслуживает локальные DNS/HTTP connectivity checks телефона.
 
-DHCP в modified-сборке берёт LAN/DHCP параметры из Ralink NVRAM и выдаёт IP самого AP как DNS.
+DHCP в этой ветке брал LAN/DHCP параметры из Ralink NVRAM и выдавал IP самого AP как DNS.
+
+Актуальный прошитый образ проекта описан в [DEVICE.md](DEVICE.md) и [FIRMWARE.md](FIRMWARE.md):
+
+```text
+dumps\verified\mtd4_at_wpa2_airtools_wn723n_20260920.bin
+```
+
+Он добавляет WN723N/RTL8188EUS monitor, airtools UDP API и WPA2 management AP `AT`.
 
 Правила сборки, RAM test boot и recovery находятся в [FIRMWARE.md](FIRMWARE.md).

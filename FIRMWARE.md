@@ -1,68 +1,101 @@
-# ENDOSCOPE firmware workflow
+# ENDOSCOPE Firmware Workflow
 
-## Каталоги образов
+Этот файл описывает текущий рабочий путь для `mtd4` firmware. Bootloader/config/factory не являются частью обычного firmware update. Правила безопасности flash/recovery находятся в [BRICK.md](BRICK.md).
 
-Заводские дампы хранятся только в:
+## Текущий рабочий образ
 
 ```text
-dumps\original\
+path:   dumps\verified\mtd4_at_wpa2_airtools_wn723n_20260920.bin
+size:   3866624
+sha256: 7443772442fbbc038305f75659d8b628b319b1da73f99f699a43904f8271124d
 ```
 
-Эти файлы являются recovery-копией и не должны перезаписываться сборочными или flash-скриптами.
+Этот образ прошит и проверен. После reboot U-Boot распаковал uImage, checksum прошел, Linux стартовал.
 
-Готовые модифицированные partition images хранятся только в:
+## Что внутри
+
+```text
+ra1 AP/control:
+  SSID: AT
+  auth: WPA2PSK / AES
+  password: 12345678
+  IP: 192.168.10.123
+
+wlan0 monitor:
+  adapter: TP-Link WN723N / RTL8188EUS
+  driver: 8188eu
+  mode: Monitor
+  type: 803
+  channel: 11
+
+runtime payload:
+  /bin/airtools
+  /bin/airwifi
+  /bin/airodump
+  /bin/aireplay
+  /bin/wn723n-monitor
+  /bin/wn723n-extract
+```
+
+## Сборка
+
+Основной builder текущего WN723N/airtools образа:
+
+```powershell
+python scripts\build\build-mtd4-airtools.py
+```
+
+Builder пишет новый образ в disposable-каталог:
 
 ```text
 dumps\modified\
 ```
 
-Текущий модифицированный образ:
+Проверенный руками образ нужно продвигать в:
 
 ```text
-dumps\modified\mtd4_connectivity.bin
+dumps\verified\
 ```
 
-## Сборка
-
-Использовать только:
+Старый общий wrapper тоже существует:
 
 ```powershell
-scripts\build-firmware.bat
+scripts\build\build-firmware.bat
 ```
 
-Сценарий выполняет три обязательных шага:
-
-1. собирает `endoscope-connectivity` под MIPS32EL;
-2. пересобирает `mtd4` с legacy LZMA SDK 9.20;
-3. запускает `verify-mtd4.py`.
-
-Образ не считается готовым, пока проверка не закончилась строкой:
+После сборки обязательно проверить:
 
 ```text
-PRELIGHT OK
+size == 3866624
+uImage header CRC OK
+uImage data CRC OK
+rootfs payload contains airtools/airwifi/airodump/aireplay
 ```
 
-Preflight проверяет размер partition, uImage CRC, оба LZMA-слоя, совместимость их заголовков с заводским образом, неизменность kernel layout и сохранённой области flash.
+## Прошивка mtd4
 
-## Обязательный RAM test boot
+Писать только раздел `Kernel` / `mtd4`.
 
-Новый `mtd4` нельзя сразу записывать во flash.
+Проверенный результат последней прошивки:
 
-Сначала он должен успешно загрузиться только из RAM через U-Boot:
-
-```powershell
-python scripts\uart-test-boot.py --image dumps\modified\mtd4_connectivity.bin --boot
+```text
+TFTP_RET:0
+mtd4_wn723n.bin size=3866624
+mtd_write target: mtd4 "Kernel"
+MTD_WRITE_RET:0
+SYNC_DONE
+U-Boot Data Size: 2946383 Bytes
+Verifying Checksum ... OK
+LINUX started
 ```
 
-Сценарий:
+Практические требования:
 
-1. повторно выполняет preflight;
-2. входит в U-Boot CLI через UART;
-3. загружает uImage в RAM по Kermit;
-4. выполняет `bootm`;
-5. не выполняет ни одной команды записи SPI flash.
-
-Только образ, который реально загрузился из RAM и прошёл проверку нужных сервисов, допускается к постоянной записи.
+- UART подключен до записи и остается подключенным до успешной загрузки.
+- TFTP transfer проверен по размеру.
+- `mtd_write` пишет только `Kernel`.
+- Reboot выполняется только после `MTD_WRITE_RET:0` и `SYNC_DONE`.
+- После загрузки проверяются Wi-Fi, telnet/http и airtools UDP.
 
 ## Recovery
 
@@ -83,43 +116,20 @@ CP2102 TXD -> R
 питание CP2102 не подключать
 ```
 
-Для восстановления сначала загружается заводской образ только в RAM:
-
-```powershell
-python scripts\uart-test-boot.py --image dumps\original\mtd4_kernel.bin --boot
-```
-
-После успешной загрузки заводского Linux можно восстановить `mtd4` из:
+Оригинальные recovery-копии хранятся в:
 
 ```text
-dumps\original\mtd4_kernel.bin
+dumps\original\
 ```
 
-Постоянную запись выполнять только с UART, подключённым как recovery-канал.
+`dumps\original` не перезаписывать сборочными или flash-скриптами.
 
-## Правила flash
+## LZMA note
 
-- Никогда не изменять `mtd1`, `mtd2` или `mtd3` при обновлении Linux.
-- Для Linux использовать только `mtd4`.
-- Не прошивать файл, который не прошёл `verify-mtd4.py`.
-- Не прошивать modified image, который не прошёл RAM test boot.
-- Flash-операция и reboot должны быть раздельными действиями.
-- После записи сначала проверить код возврата и UART, только затем перезагружать.
-- `dumps\original` всегда сохранять неизменным.
-
-## Почему используется LZMA SDK 9.20
-
-U-Boot этого устройства ожидает legacy `.lzma` header с явным размером распакованных данных.
-
-Сборщик поэтому использует:
+U-Boot этого устройства ожидает legacy `.lzma` header с явным размером распакованных данных. Современный LZMA stream с unknown unpacked size может дать:
 
 ```text
-toolchain\lzma920\lzma.exe
+Uncompressing Kernel Image ... LZMA ERROR 1
 ```
 
-для обоих LZMA-слоёв:
-
-1. initramfs внутри kernel;
-2. полный kernel внутри U-Boot uImage.
-
-Современный LZMA stream с неизвестным unpacked size для этого U-Boot не считается совместимым.
+Поэтому при сборке `mtd4` проверять не только uImage header, но и фактическую распаковку payload.
