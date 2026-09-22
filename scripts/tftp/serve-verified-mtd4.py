@@ -3,7 +3,7 @@ import socket
 import struct
 import hashlib
 
-FILE = Path(r'D:\PROJECTS\AIRTOOLS\dumps\verified\mtd4_airtools_auto_scan_rssi_20260922.bin')
+FILE = Path(r'D:\PROJECTS\AIRTOOLS\dumps\verified\mtd4_airtools_mode_signal_20260923.bin')
 DATA = FILE.read_bytes()
 NAMES = {b'mtd4_wn723n.bin', b'/mtd4_wn723n.bin', b'mtd4_connectivity.bin', b'/mtd4_connectivity.bin'}
 print('TFTP_FILE', FILE, len(DATA), hashlib.sha256(DATA).hexdigest(), flush=True)

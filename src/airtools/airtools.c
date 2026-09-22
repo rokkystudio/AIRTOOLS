@@ -52,6 +52,8 @@ struct mode_state {
 static struct mode_state current_state;
 static int airodump_pid;
 static int scan_hopper_pid;
+static int server_socket_fd = -1;
+static int active_client_fd = -1;
 static char request_buffer[512];
 static char response_buffer[4096];
 static unsigned int response_length;
@@ -384,7 +386,12 @@ static void load_state(void)
 
 static int child_redirect_devnull(void)
 {
-    int fd = sys_open("/dev/null", O_WRONLY, 0);
+    int fd;
+    if (active_client_fd > 2)
+        sys_close(active_client_fd);
+    if (server_socket_fd > 2)
+        sys_close(server_socket_fd);
+    fd = sys_open("/dev/null", O_WRONLY, 0);
     if (fd >= 0) {
         sys_dup2(fd, 1);
         sys_dup2(fd, 2);
@@ -554,6 +561,10 @@ static int start_discovery_scan(void)
         return 51;
     }
     if (pid == 0) {
+        if (active_client_fd > 2)
+            sys_close(active_client_fd);
+        if (server_socket_fd > 2)
+            sys_close(server_socket_fd);
         channel_hopper_loop();
         sys_exit(0);
     }
@@ -747,7 +758,14 @@ static void refresh_children(void)
 static void append_status(void)
 {
     refresh_children();
-    response_append("OK airtools=1 pid=");
+    response_append("OK airtools=1 mode=");
+    if (scan_hopper_pid > 0 && airodump_pid > 0)
+        response_append("scan");
+    else if (airodump_pid > 0 && current_state.mode == 1)
+        response_append("capture");
+    else
+        response_append("idle");
+    response_append(" pid=");
     response_append_dec((airodump_pid > 0 && scan_hopper_pid <= 0) ? (unsigned int)airodump_pid : 0);
     response_append(" scan=");
     response_append_dec(scan_hopper_pid > 0 ? 1 : 0);
@@ -911,6 +929,7 @@ static int run_server(void)
     u8 address[16];
 
     server_fd = sys_socket(AF_INET, SOCK_STREAM, 0);
+    server_socket_fd = server_fd;
     if (server_fd >= 0) {
         int reuse = 1;
         sys_setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
@@ -939,8 +958,10 @@ static int run_server(void)
         client_fd = sys_accept(server_fd, client, &client_length);
         if (client_fd < 0)
             continue;
+        active_client_fd = client_fd;
         handle_client(client_fd);
         sys_close(client_fd);
+        active_client_fd = -1;
     }
 }
 

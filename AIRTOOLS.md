@@ -7,9 +7,9 @@ AIRTOOLS состоит из устройства на MT7628 с отдельн�
 Текущий физически проверенный `mtd4`:
 
 ```text
-dumps\verified\mtd4_airtools_auto_scan_rssi_20260922.bin
+dumps\verified\mtd4_airtools_mode_signal_20260923.bin
 size=3866624
-sha256=4de334944d27ac6fcf77a9de48d81308fbfc2a5137b4d14704b95e0c2e9e6e05
+sha256=145413bdc96f95bcfe59c814f396ee1f0f45a4d3f8c6a08e37cf44e7de59c6ef
 ```
 
 Проверено на реальном устройстве: boot, management AP, TCP/8088, автоматический discovery scan, channel hopping 1..13, RSSI из radiotap, сортировка Android по уровню сигнала, атомарный переход scan -> capture, фильтрация capture по BSSID/channel, возврат capture -> scan и восстановление экрана Android по `/status` после перезапуска приложения.
@@ -19,7 +19,7 @@ sha256=4de334944d27ac6fcf77a9de48d81308fbfc2a5137b4d14704b95e0c2e9e6e05
 ```text
 dumps\modified\mtd4_base_connectivity_wn723n_autostart_airtools.bin
 size=3866624
-sha256=4de334944d27ac6fcf77a9de48d81308fbfc2a5137b4d14704b95e0c2e9e6e05
+sha256=145413bdc96f95bcfe59c814f396ee1f0f45a4d3f8c6a08e37cf44e7de59c6ef
 ```
 
 ## Management network
@@ -36,6 +36,8 @@ Android TCP sockets привязываются к физической Wi-Fi net
 ## TCP API
 
 `/bin/airtools` принимает одну текстовую команду на TCP connection, отправляет ответ и закрывает connection.
+
+Перед `exec` дочерние `airodump`/`aireplay` процессы и discovery hopper закрывают унаследованные control server/client descriptors. Поэтому worker не удерживает TCP/8088 после остановки или перезапуска `airtools`.
 
 ```text
 /status
@@ -57,11 +59,11 @@ Android TCP sockets привязываются к физической Wi-Fi net
 `/status` возвращает фактический runtime state:
 
 ```text
-OK airtools=1 pid=<capture_pid> scan=<0|1> ?mode=<all|bssid>...&channel=<n>
+OK airtools=1 mode=<idle|scan|capture> pid=<capture_pid> scan=<0|1> ?mode=<all|bssid>...&channel=<n>
 state_path=/tmp/airtools.state
 ```
 
-При discovery `scan=1`, а capture pid в статусе равен 0. При target capture `scan=0`, `pid>0`, `mode=bssid`.
+Поле `mode` является явным runtime-режимом устройства: `idle`, `scan` или `capture`. Android строит экран по нему, а не выводит режим косвенно из PID или сохранённого target.
 
 ## Discovery scan и RSSI
 
@@ -80,9 +82,9 @@ Runtime index:
 
 Отдельного экрана `SCAN`, кнопки `SCAN` и кнопки `START/STOP` больше нет.
 
-После запуска приложение автоматически запрашивает `/status`. Если устройство сканирует, показывается список Wi-Fi сетей. Если уже идёт target capture, сразу показывается выбранная сеть. Idle с сохранённым BSSID возобновляет capture, а idle без target запускает discovery scan.
+После запуска приложение автоматически запрашивает `/status`. Если устройство сканирует, показывается список Wi-Fi сетей. Если уже идёт target capture, сразу показывается выбранная сеть. Если устройство сообщает `idle`, Android запускает discovery scan. Выход из приложения не переводит работающий `scan` или `capture` в `idle`.
 
-Во время scan список обновляется автоматически. Каждая строка показывает ESSID, BSSID, канал, Beacon/Data и RSSI в dBm. Сети отсортированы по RSSI.
+Во время scan список обновляется автоматически. Каждая карточка показывает ESSID, BSSID, канал, RSSI в dBm, процент и графическую шкалу сигнала. Сети отсортированы по RSSI.
 
 Нажатие на сеть сразу вызывает `/select`; отдельный START не нужен. После успешного перехода Android показывает только выбранную сеть и live capture details: BSSID, channel, RSSI, Beacon/Probe/Data counters и состояние WPA handshake.
 

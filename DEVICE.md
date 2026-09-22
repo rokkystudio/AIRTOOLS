@@ -7,9 +7,9 @@
 Устройство рабочее. Прошитый образ:
 
 ```text
-dumps\verified\mtd4_airtools_auto_scan_rssi_20260922.bin
+dumps\verified\mtd4_airtools_mode_signal_20260923.bin
 size:   3866624
-sha256: 4de334944d27ac6fcf77a9de48d81308fbfc2a5137b4d14704b95e0c2e9e6e05
+sha256: 145413bdc96f95bcfe59c814f396ee1f0f45a4d3f8c6a08e37cf44e7de59c6ef
 ```
 
 Management AP:
