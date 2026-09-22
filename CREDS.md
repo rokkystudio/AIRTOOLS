@@ -1,4 +1,4 @@
-﻿# ENDOSCOPE: данные доступа
+# AIRTOOLS: данные доступа
 
 Этот файл хранит всё, что относится к логинам, паролям, hash-значениям, строкам учётных записей и восстановлению штатного Telnet-доступа.
 В README.md эти значения не дублировать.
@@ -17,7 +17,7 @@ password: molinkad
 Подключение:
 
 ``powershell
-D:\PROJECTS\ENDOSCOPE\scripts\wifi\connect-wifi.bat
+D:\PROJECTS\AIRTOOLS\scripts\wifi\connect-wifi.bat
 ``
 
 ### UART напрямую
@@ -34,13 +34,13 @@ prompt: #
 Подключение:
 
 ``powershell
-D:\PROJECTS\ENDOSCOPE\scripts\uart\connect-uart.bat
+D:\PROJECTS\AIRTOOLS\scripts\uart\connect-uart.bat
 ``
 
 Для другого COM-порта:
 
 ``powershell
-D:\PROJECTS\ENDOSCOPE\scripts\uart\connect-uart.bat COM4
+D:\PROJECTS\AIRTOOLS\scripts\uart\connect-uart.bat COM4
 ``
 
 ## Hash из /etc/passwd
@@ -77,7 +77,7 @@ shell: /bin/sh
 Hash был сохранён в:
 
 ``text
-D:\PROJECTS\ENDOSCOPE\hashcat\hash.txt
+D:\PROJECTS\AIRTOOLS\hashcat\hash.txt
 ``
 
 Использовался hashcat:
@@ -110,16 +110,16 @@ progress at crack: about 22.15% of full length-8 keyspace
 Текущий запуск перебора длины 1..8:
 
 ``powershell
-D:\PROJECTS\ENDOSCOPE\hashcat\run-len1-8.bat
+D:\PROJECTS\AIRTOOLS\hashcat\run-len1-8.bat
 ``
 
 Файлы восстановления:
 
 ``text
-D:\PROJECTS\ENDOSCOPE\hashcat\hash.txt
-D:\PROJECTS\ENDOSCOPE\hashcat\hashcat-endoscope.potfile
-D:\PROJECTS\ENDOSCOPE\hashcat\hashcat-found.txt
-D:\PROJECTS\ENDOSCOPE\hashcat\run-len1-8.bat
+D:\PROJECTS\AIRTOOLS\hashcat\hash.txt
+D:\PROJECTS\AIRTOOLS\hashcat\hashcat-endoscope.potfile
+D:\PROJECTS\AIRTOOLS\hashcat\hashcat-found.txt
+D:\PROJECTS\AIRTOOLS\hashcat\run-len1-8.bat
 ``
 
 ## Данные из внешней статьи, не от нашего устройства

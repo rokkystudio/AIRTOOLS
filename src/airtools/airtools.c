@@ -7,7 +7,13 @@ extern int sys_write(int fd, const void *buffer, unsigned int count);
 extern int sys_open(const char *path, unsigned int flags, unsigned int mode);
 extern int sys_close(int fd);
 extern int sys_socket(int domain, int type, int protocol);
+extern int sys_setsockopt(int fd, int level, int option, const void *value, unsigned int length);
 extern int sys_bind(int fd, const void *address, unsigned int length);
+extern int sys_listen(int fd, int backlog);
+extern int sys_accept(int fd, void *address, unsigned int *address_length);
+extern int sys_recv(int fd, void *buffer, unsigned int length, unsigned int flags);
+extern int sys_send(int fd, const void *buffer, unsigned int length, unsigned int flags);
+extern int sys_unlink(const char *path);
 extern int sys_recvfrom(int fd, void *buffer, unsigned int length, unsigned int flags, void *address, unsigned int *address_length);
 extern int sys_sendto(int fd, const void *buffer, unsigned int length, unsigned int flags, const void *address, unsigned int address_length);
 extern int sys_fork(void);
@@ -20,6 +26,9 @@ extern void sys_exit(int status);
 
 #define AF_INET 2
 #define SOCK_DGRAM 1
+#define SOCK_STREAM 2
+#define SOL_SOCKET 0xffff
+#define SO_REUSEADDR 4
 #define AIRTOOLS_PORT 8088
 #define SIGTERM 15
 
@@ -30,6 +39,7 @@ extern void sys_exit(int status);
 
 #define STATE_PATH "/tmp/airtools.state"
 #define AIRHS_INDEX "/tmp/airhs/index.txt"
+#define AIRSCAN_INDEX "/tmp/airscan-networks.txt"
 
 struct mode_state {
     u8 mode;       /* 0=all, 1=bssid */
@@ -41,6 +51,7 @@ struct mode_state {
 
 static struct mode_state current_state;
 static int airodump_pid;
+static int scan_hopper_pid;
 static char request_buffer[512];
 static char response_buffer[4096];
 static unsigned int response_length;
@@ -455,6 +466,101 @@ static int stop_airodump(void)
     return 0;
 }
 
+static void stop_scan_hopper(void)
+{
+    if (scan_hopper_pid <= 0)
+        return;
+    sys_kill(scan_hopper_pid, SIGTERM);
+    sys_waitpid(scan_hopper_pid, 0, 0);
+    scan_hopper_pid = 0;
+}
+
+static int set_monitor_channel(unsigned int channel, int ensure_monitor)
+{
+    int pid;
+    int wait_status = 0;
+    dec_to_text(channel_text, sizeof(channel_text), channel);
+    pid = sys_fork();
+    if (pid < 0)
+        return -1;
+    if (pid == 0) {
+        child_redirect_devnull();
+        if (ensure_monitor) {
+            char *argv[4];
+            argv[0] = (char *)"wn723n-monitor";
+            argv[1] = (char *)"monitor";
+            argv[2] = channel_text;
+            argv[3] = 0;
+            exec_path_pair("/bin/wn723n-monitor", "/bin/wn723n-monitor", argv);
+        } else {
+            char *argv[5];
+            argv[0] = (char *)"iwconfig";
+            argv[1] = (char *)"wlan0";
+            argv[2] = (char *)"channel";
+            argv[3] = channel_text;
+            argv[4] = 0;
+            exec_path_pair("/bin/iwconfig", "/bin/iwconfig", argv);
+        }
+    }
+    if (sys_waitpid(pid, &wait_status, 0) < 0)
+        return -1;
+    return wait_status == 0 ? 0 : -1;
+}
+
+static void channel_hopper_loop(void)
+{
+    unsigned int channel = 1;
+    for (;;) {
+        set_monitor_channel(channel, 0);
+        {
+            u32 request[2];
+            request[0] = 0;
+            request[1] = 350000000U;
+            sys_nanosleep(request, 0);
+        }
+        channel++;
+        if (channel > 13)
+            channel = 1;
+    }
+}
+
+static int start_discovery_scan(void)
+{
+    int pid;
+    char *argv[4];
+    stop_scan_hopper();
+    stop_airodump();
+    sys_unlink(AIRSCAN_INDEX);
+
+    if (set_monitor_channel(1, 1) != 0)
+        return 52;
+
+    pid = sys_fork();
+    if (pid < 0)
+        return 50;
+    if (pid == 0) {
+        child_redirect_devnull();
+        argv[0] = (char *)"airodump";
+        argv[1] = (char *)"0";
+        argv[2] = (char *)"all";
+        argv[3] = 0;
+        exec_path_pair("/bin/airodump", "/tmp/airodump", argv);
+    }
+    airodump_pid = pid;
+
+    pid = sys_fork();
+    if (pid < 0) {
+        stop_airodump();
+        return 51;
+    }
+    if (pid == 0) {
+        channel_hopper_loop();
+        sys_exit(0);
+    }
+    scan_hopper_pid = pid;
+    return 0;
+}
+
 static int spawn_aireplay_from_path(const char *path)
 {
     char mode[16];
@@ -622,18 +728,29 @@ static int apply_set_request(const char *path)
 
     current_state = next;
     save_state();
-    if (spawn_airodump() != 0)
-        return 23;
     response_append("OK set ");
     build_state_line();
     response_append(state_line);
     return 0;
 }
 
+static void refresh_children(void)
+{
+    if (airodump_pid > 0 && sys_waitpid(airodump_pid, 0, 1) == airodump_pid) {
+        airodump_pid = 0;
+        stop_scan_hopper();
+    }
+    if (scan_hopper_pid > 0 && sys_waitpid(scan_hopper_pid, 0, 1) == scan_hopper_pid)
+        scan_hopper_pid = 0;
+}
+
 static void append_status(void)
 {
+    refresh_children();
     response_append("OK airtools=1 pid=");
-    response_append_dec(airodump_pid > 0 ? (unsigned int)airodump_pid : 0);
+    response_append_dec((airodump_pid > 0 && scan_hopper_pid <= 0) ? (unsigned int)airodump_pid : 0);
+    response_append(" scan=");
+    response_append_dec(scan_hopper_pid > 0 ? 1 : 0);
     response_append(" ");
     build_state_line();
     response_append(state_line);
@@ -680,13 +797,32 @@ static int handle_request(const char *path)
     }
     if (starts_with(path, "/set"))
         return apply_set_request(path);
+    if (starts_with(path, "/scan/start")) {
+        status = start_discovery_scan();
+        response_append(status == 0 ? "OK scan start\n" : "ERR scan start\n");
+        return status;
+    }
+    if (starts_with(path, "/scan/stop")) {
+        stop_scan_hopper();
+        stop_airodump();
+        response_append("OK scan stop\n");
+        return 0;
+    }
+    if (starts_with(path, "/networks")) {
+        response_append("OK networks\n");
+        append_file(AIRSCAN_INDEX);
+        return 0;
+    }
     if (starts_with(path, "/start")) {
+        stop_scan_hopper();
+        stop_airodump();
         load_state();
         status = spawn_airodump();
         response_append(status == 0 ? "OK start\n" : "ERR start\n");
         return status;
     }
     if (starts_with(path, "/stop")) {
+        stop_scan_hopper();
         stop_airodump();
         response_append("OK stop\n");
         return 0;
@@ -703,31 +839,69 @@ static int handle_request(const char *path)
     return 1;
 }
 
-static void send_response(int fd, const u8 *client, unsigned int client_length, int status)
+static int write_all(int fd, const char *buffer, unsigned int length)
+{
+    unsigned int offset = 0;
+    while (offset < length) {
+        int written = sys_send(fd, buffer + offset, length - offset, 0);
+        if (written <= 0)
+            return -1;
+        offset += (unsigned int)written;
+    }
+    return 0;
+}
+
+static void send_response(int client_fd, int status)
 {
     if (status != 0) {
         response_append("ERR status=");
         response_append_dec((unsigned int)status);
         response_append("\n");
     }
-    sys_sendto(fd, response_buffer, response_length, 0, client, client_length);
+    write_all(client_fd, response_buffer, response_length);
 }
 
-static void sleep_briefly(void)
+static void handle_client(int client_fd)
 {
-    u32 request[2];
-    request[0] = 0;
-    request[1] = 100000000U;
-    sys_nanosleep(request, 0);
+    unsigned int total = 0;
+    int status;
+
+    while (total + 1 < sizeof(request_buffer)) {
+        int length = sys_recv(client_fd, request_buffer + total,
+                              sizeof(request_buffer) - total - 1, 0);
+        unsigned int index;
+        if (length <= 0)
+            break;
+        total += (unsigned int)length;
+        for (index = 0; index < total; index++) {
+            if (request_buffer[index] == '\n') {
+                total = index;
+                goto request_complete;
+            }
+        }
+    }
+
+request_complete:
+    while (total > 0 && (request_buffer[total - 1] == '\n' || request_buffer[total - 1] == '\r'))
+        total--;
+    request_buffer[total] = 0;
+    if (total == 0)
+        return;
+    status = handle_request(request_buffer);
+    send_response(client_fd, status);
 }
 
 static int run_server(void)
 {
-    int fd;
+    int server_fd;
     u8 address[16];
 
-    fd = sys_socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0)
+    server_fd = sys_socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd >= 0) {
+        int reuse = 1;
+        sys_setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    }
+    if (server_fd < 0)
         return 10;
 
     zero_bytes(address, sizeof(address));
@@ -735,30 +909,24 @@ static int run_server(void)
     address[1] = 0;
     address[2] = (u8)(AIRTOOLS_PORT >> 8);
     address[3] = (u8)(AIRTOOLS_PORT & 0xff);
-    if (sys_bind(fd, address, sizeof(address)) < 0)
+    if (sys_bind(server_fd, address, sizeof(address)) < 0)
         return 11;
+    if (sys_listen(server_fd, 4) < 0)
+        return 12;
 
-    sys_write(1, "AIRTOOLS_UDP_BOUND port=8088\n", 29);
-
+    sys_write(1, "AIRTOOLS_TCP_LISTEN port=8088\n", 30);
     load_state();
-    spawn_airodump();
 
     for (;;) {
         u8 client[16];
         unsigned int client_length = sizeof(client);
-        int length;
-        int status;
+        int client_fd;
         zero_bytes(client, sizeof(client));
-        length = sys_recvfrom(fd, request_buffer, sizeof(request_buffer) - 1, 0, client, &client_length);
-        if (length < 0) {
-            sleep_briefly();
+        client_fd = sys_accept(server_fd, client, &client_length);
+        if (client_fd < 0)
             continue;
-        }
-        if (length == 0)
-            continue;
-        request_buffer[length] = 0;
-        status = handle_request(request_buffer);
-        send_response(fd, client, client_length, status);
+        handle_client(client_fd);
+        sys_close(client_fd);
     }
 }
 

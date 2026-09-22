@@ -25,7 +25,7 @@ from pathlib import Path
 import serial
 
 
-ROOT = Path(r"D:\PROJECTS\ENDOSCOPE")
+ROOT = Path(r"D:\PROJECTS\AIRTOOLS")
 DEFAULT_IMAGE = ROOT / "dumps" / "modified" / "mtd4_connectivity.bin"
 VERIFY_SCRIPT = ROOT / "src" / "connectivity" / "verify-mtd4.py"
 

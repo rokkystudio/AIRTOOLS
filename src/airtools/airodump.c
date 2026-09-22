@@ -30,6 +30,7 @@ extern void sys_exit(int status);
 #define HS_CAPTURE_BYTES 768
 #define HS_STORE_DIR "/tmp/airhs"
 #define HS_INDEX_PATH "/tmp/airhs/index.txt"
+#define NETWORK_INDEX_PATH "/tmp/airscan-networks.txt"
 
 struct stored_frame {
     u16 length;
@@ -493,6 +494,41 @@ static void rewrite_index(void)
     sys_close(fd);
 }
 
+static void rewrite_network_index(void)
+{
+    char line[160];
+    unsigned int index;
+    int fd = sys_open(NETWORK_INDEX_PATH, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0)
+        return;
+    {
+        const char *header = "# bssid,channel,beacons,probes,data,essid\n";
+        sys_write(fd, header, str_len(header));
+    }
+    for (index = 0; index < MAX_APS; index++) {
+        struct ap_info *ap = &aps[index];
+        unsigned int offset = 0;
+        if (!ap->used || !ap->channel)
+            continue;
+        append_mac_colon(line, &offset, sizeof(line), ap->bssid);
+        append_char(line, &offset, sizeof(line), ',');
+        append_dec(line, &offset, sizeof(line), ap->channel);
+        append_char(line, &offset, sizeof(line), ',');
+        append_dec(line, &offset, sizeof(line), ap->beacons);
+        append_char(line, &offset, sizeof(line), ',');
+        append_dec(line, &offset, sizeof(line), ap->probes);
+        append_char(line, &offset, sizeof(line), ',');
+        append_dec(line, &offset, sizeof(line), ap->data);
+        append_char(line, &offset, sizeof(line), ',');
+        if (ap->ssid_len)
+            append_text(line, &offset, sizeof(line), ap->ssid);
+        else
+            append_text(line, &offset, sizeof(line), "<hidden/unknown>");
+        append_char(line, &offset, sizeof(line), '\n');
+        sys_write(fd, line, offset);
+    }
+    sys_close(fd);
+}
 static void save_handshake(struct ap_info *ap)
 {
     char path[64];
@@ -714,6 +750,7 @@ static void handle_frame(const u8 *frame, unsigned int length)
 static void print_table(void)
 {
     unsigned int index;
+    rewrite_network_index();
     write_text("\nBSSID              CH  BEACON PROBE DATA HS  ESSID\n");
     for (index = 0; index < MAX_APS; index++) {
         struct ap_info *ap = &aps[index];
@@ -786,6 +823,7 @@ static int run_dump(unsigned int target_frames)
 
     sys_mkdir(HS_STORE_DIR, 0755);
     rewrite_index();
+    rewrite_network_index();
 
     write_text("AIRODUMP_START interface=wlan0 frames=");
     write_dec(target_frames);

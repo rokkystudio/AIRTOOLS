@@ -1,4 +1,4 @@
-# ENDOSCOPE
+# AIRTOOLS
 
 Рабочий репозиторий по исследованию и модификации Wi-Fi эндоскопа на MT7628.
 
@@ -8,7 +8,7 @@
 - [FIRMWARE.md](FIRMWARE.md) - сборка и прошивка текущего `mtd4`.
 - [BRICK.md](BRICK.md) - как не закирпичить устройство, flash safety и recovery.
 - [MONITOR.md](MONITOR.md) - актуальная monitor-архитектура: MT7628 AP + WN723N/RTL8188EUS monitor.
-- [AIRTOOLS.md](AIRTOOLS.md) - текущая airtools-платформа, UDP API, Wi-Fi config и handshake storage.
+- [AIRTOOLS.md](AIRTOOLS.md) - текущая airtools-платформа, control API, target scan и handshake storage.
 - [TODO.md](TODO.md) - незакрытые задачи и критерии готовности.
 - [ARTIFACTS.md](ARTIFACTS.md) - сохранённые бинарники, драйверы и проверенные firmware artifacts.
 
@@ -19,9 +19,9 @@
 Прошитый рабочий образ:
 
 ```text
-dumps\verified\mtd4_at_wpa2_airtools_wn723n_20260920.bin
+dumps\verified\mtd4_airtools_tcp_scan_20260922.bin
 size:   3866624
-sha256: 7443772442fbbc038305f75659d8b628b319b1da73f99f699a43904f8271124d
+sha256: ab20813ee4bb9f58a96ec5c246431af901ec0249f3d645c17bcda74195d05673
 ```
 
 Устройство после загрузки:
@@ -46,7 +46,7 @@ TCP 80 open
 mt_wifi loaded
 ra1 = AP/control
 wlan0 = monitor, type 803
-airtools UDP/8088 responds
+airtools TCP/8088 responds
 ```
 
 ## Структура проекта

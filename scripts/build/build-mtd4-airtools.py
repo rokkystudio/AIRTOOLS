@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-ROOT = Path(r"D:\PROJECTS\ENDOSCOPE")
+ROOT = Path(r"D:\PROJECTS\AIRTOOLS")
 BASE_MTD4 = ROOT / "dumps" / "bases" / "mtd4_connectivity_base_20260916.bin"
 BIN_DIR = ROOT / "artifacts" / "binaries" / "mipsel"
 EXTRACTOR = BIN_DIR / "mtd4_lzma_extract_8188eu_mipsel"
@@ -207,7 +207,7 @@ case "$CMD" in
 esac
 '''
 
-README = f"""WN723N RTL8188EUS monitor support for ENDOSCOPE\n\nBase image: dumps\\bases\\mtd4_connectivity_base_20260916.bin\n\nThe built-in MT7628 ra1 interface remains the normal ENDOSCOPE AP.\nThe external TP-LINK WN723N / RTL8188EUS driver is stored compressed in mtd4\nat offset 0x{PAYLOAD_OFFSET:06X}. It is started automatically from wifi_ap.sh dhcp_init after the normal ra1 AP and connectivity-check service startup.\n\nManual sequence:\n\n    /bin/wn723n-monitor status\n    /bin/wn723n-monitor monitor 11\n    /bin/wn723n-monitor capture\n    /bin/wn723n-monitor reboot-clean\n\nExpected monitor state:\n\n    wlan0 Mode:Monitor\n    /sys/class/net/wlan0/type = 803\n\nRuntime extraction writes /tmp/8188eu.ko. Returning to the ordinary clean state\nis done by rebooting. Boot autoload is configured: /bin/airtools runs from wifi_ap.sh dhcp_init, next to endoscope-connectivity and udhcpd, and starts wn723n-monitor plus airodump collector.\n"""
+README = f"""WN723N RTL8188EUS monitor support for ENDOSCOPE\n\nBase image: dumps\\bases\\mtd4_connectivity_base_20260916.bin\n\nThe built-in MT7628 ra1 interface remains the normal ENDOSCOPE AP.\nThe external TP-LINK WN723N / RTL8188EUS driver is stored compressed in mtd4\nat offset 0x{PAYLOAD_OFFSET:06X}. It is started automatically from wifi_ap.sh dhcp_init after the normal ra1 AP and connectivity-check service startup.\n\nManual sequence:\n\n    /bin/wn723n-monitor status\n    /bin/wn723n-monitor monitor 11\n    /bin/wn723n-monitor capture\n    /bin/wn723n-monitor reboot-clean\n\nExpected monitor state:\n\n    wlan0 Mode:Monitor\n    /sys/class/net/wlan0/type = 803\n\nRuntime extraction writes /tmp/8188eu.ko. Returning to the ordinary clean state\nis done by rebooting. Boot autoload is configured: /bin/airtools runs from wifi_ap.sh dhcp_init next to endoscope-connectivity and udhcpd. It listens on TCP/8088; WN723N discovery/capture starts only on API request.\n"""
 
 
 @dataclass

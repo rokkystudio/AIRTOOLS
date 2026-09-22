@@ -34,6 +34,8 @@ syscall_wrapper sys_accept, 4168
 syscall_wrapper sys_listen, 4174
 syscall_wrapper sys_bind, 4169
 syscall_wrapper sys_recv, 4175
+syscall_wrapper sys_send, 4178
+syscall_wrapper sys_setsockopt, 4181
 syscall_wrapper sys_recvfrom, 4176
 syscall_wrapper sys_sendto, 4180
 syscall_wrapper sys_socket, 4183

@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-ROOT = Path(r"D:\PROJECTS\ENDOSCOPE")
+ROOT = Path(r"D:\PROJECTS\AIRTOOLS")
 ORIGINAL_MTD4 = ROOT / "dumps" / "original" / "mtd4_kernel.bin"
 SERVICE = ROOT / "artifacts" / "binaries" / "mipsel" / "endoscope-connectivity"
 LZMA_EXE = ROOT / "toolchain" / "lzma920" / "lzma.exe"

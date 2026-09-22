@@ -1,4 +1,4 @@
-# ENDOSCOPE: общая информация о системе
+# AIRTOOLS: общая информация о системе
 
 ## Устройство
 
@@ -313,9 +313,9 @@ DHCP в этой ветке брал LAN/DHCP параметры из Ralink NVR
 Актуальный прошитый образ проекта описан в [DEVICE.md](DEVICE.md) и [FIRMWARE.md](FIRMWARE.md):
 
 ```text
-dumps\verified\mtd4_at_wpa2_airtools_wn723n_20260920.bin
+dumps\verified\mtd4_airtools_tcp_scan_20260922.bin
 ```
 
-Он добавляет WN723N/RTL8188EUS monitor, airtools UDP API и WPA2 management AP `AT`.
+Он добавляет WN723N/RTL8188EUS monitor, airtools TCP API и WPA2 management AP `AT`.
 
 Правила сборки, RAM test boot и recovery находятся в [FIRMWARE.md](FIRMWARE.md).

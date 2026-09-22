@@ -1,6 +1,6 @@
 from pathlib import Path
 import re
-root = Path(r'D:\PROJECTS\ENDOSCOPE')
+root = Path(r'D:\PROJECTS\AIRTOOLS')
 mon = root / 'services' / 'monitor'
 mon.mkdir(parents=True, exist_ok=True)
 script = r'''#!/bin/sh

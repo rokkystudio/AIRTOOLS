@@ -1,157 +1,121 @@
-# AIRTOOLS Платформа
+# AIRTOOLS платформа
 
-Этот файл фиксирует актуальную платформу управления поверх прошивки `mtd4`: AP `AT`, WN723N monitor, UDP API и хранение handshakes.
+Текущая архитектура управления AIRTOOLS: management AP `AT`, отдельный WN723N/RTL8188EUS в monitor mode, TCP control API и Android-клиент `D:\PROJECTS\AIRTOOLS-APP`.
 
-## Firmware Baseline
+## Проверенная прошивка
+
+Последний физически проверенный образ:
 
 ```text
-dumps\verified\mtd4_at_wpa2_airtools_wn723n_20260920.bin
+dumps\verified\mtd4_airtools_tcp_scan_20260922.bin
 size=3866624
-sha256=7443772442fbbc038305f75659d8b628b319b1da73f99f699a43904f8271124d
+sha256=ab20813ee4bb9f58a96ec5c246431af901ec0249f3d645c17bcda74195d05673
 ```
 
-Management AP:
+Образ физически проверен: boot, management AP, TCP/8088, Android reconnect, SCAN, channel hopping и выдача найденных сетей.
+
+Текущий TCP-кандидат:
 
 ```text
-SSID: AT
-auth: WPA2PSK
-cipher: AES/CCMP
-password: 12345678
-IP: 192.168.10.123
-channel: 11
+dumps\modified\mtd4_base_connectivity_wn723n_autostart_airtools.bin
+size=3866624
+sha256=ab20813ee4bb9f58a96ec5c246431af901ec0249f3d645c17bcda74195d05673
 ```
 
-## Runtime Components
+Важно: Linux `SOCK_STREAM=1`, `SOCK_DGRAM=2`. Ошибочные значения блокировали работу нового TCP `/bin/airtools`; исправлено до сборки этого кандидата.
+
+## Management network
+
+Management AP остается пользовательской точкой подключения. Android-приложение не вводит и не меняет пароль Wi-Fi.
 
 ```text
-/bin/airtools       14424
-/bin/airwifi         1231
-/bin/airodump       13272
-/bin/aireplay        6604
-/bin/wn723n-monitor  2157
-/bin/wn723n-extract 14360
+service IP: 192.168.10.123
+control: TCP/8088
 ```
 
-Kernel/modules:
+IP и port являются внутренними параметрами и в пользовательском статусе Android не показываются.
 
-```text
-mt_wifi loaded
-8188eu loaded
-ra1 = AP/control interface
-wlan0 = monitor interface
-/sys/class/net/wlan0/type = 803
-```
+## TCP API
 
-## UDP API
-
-Transport:
-
-```text
-UDP/8088
-device: 192.168.10.123
-```
-
-Verified commands:
+`/bin/airtools` принимает одну текстовую команду на TCP connection, отправляет ответ и закрывает connection.
 
 ```text
 /status
-/wifi/status
+/set?mode=bssid&bssid=<mac>&channel=<n>
+/start
+/stop
+/scan/start
+/scan/stop
+/networks
 /handshakes
 /aireplay?mode=test&count=1
 ```
 
-Verified responses:
+`/set` только сохраняет target. Capture запускается только через `/start` и останавливается через `/stop`.
+
+`/status` возвращает состояние capture и discovery scan:
 
 ```text
-/status -> OK airtools=1 pid=266 ?mode=all&channel=11
-/wifi/status -> OK wifi ssid=AT pass_len=8 auth=WPA2PSK charset=alnum ssid_len=1..32 pass_len=8..63
-/handshakes -> OK handshakes
-/aireplay?mode=test&count=1 -> OK aireplay mode=test
+OK airtools=1 pid=<capture_pid> scan=<0|1> ?mode=<all|bssid>...&channel=<n>
+state_path=/tmp/airtools.state
 ```
 
-Wi-Fi config endpoint:
+## Выбор Wi-Fi target
+
+Экран `SCAN` запускает `/scan/start`. Во время discovery WN723N переключается по каналам 1..13, а `airodump` накапливает найденные AP.
+
+Runtime index:
 
 ```text
-/wifi/set?ssid=<ssid>&pass=<password>
+/tmp/airscan-networks.txt
+# bssid,channel,beacons,probes,data,essid
 ```
 
-Validation is intentionally narrow:
+`/networks` возвращает список. После выбора AP Android вызывает `/scan/stop`, сохраняет BSSID/channel/ESSID и возвращается на главный экран.
+
+## Capture
+
+Главный экран имеет одну кнопку `START/STOP`.
+
+`START` выполняет:
 
 ```text
-ssid: 1..32 chars, A-Z a-z 0-9
-pass: 8..63 chars, A-Z a-z 0-9
+/set?mode=bssid&bssid=<selected>&channel=<selected>
+/start
 ```
 
-Device-side validator:
+`STOP` выполняет `/stop`. Capture не стартует автоматически при запуске `/bin/airtools`.
 
-```text
-/bin/airwifi
-```
-
-Android-side validator mirrors the same length and alnum rules.
-
-## Airodump / Handshake Storage
-
-Runtime storage:
+## Handshake storage
 
 ```text
 /tmp/airhs
+/tmp/airhs/index.txt
 ```
 
-Observed file:
+Один BSSID хранит один последний handshake PCAP. Новый handshake заменяет предыдущий для того же BSSID. Storage находится в `/tmp` и не переживает power cycle. `/handshakes` возвращает текущий index. Передача самого `.pcap` через control API еще не реализована.
 
-```text
-/tmp/airhs/e8abfaae6ea1.pcap
-```
+## Android client
 
-Current design:
+Проект: `D:\PROJECTS\AIRTOOLS-APP`.
 
-```text
-airodump collector
-  -> /tmp/airhs
-```
+Текущее поведение:
 
-Rules:
+- TCP client вместо UDP;
+- `/status` автоматически проверяется примерно раз в секунду;
+- отдельной кнопки `REFRESH` нет;
+- приложение автоматически восстанавливает TCP-связь;
+- TCP sockets привязываются к физической Wi-Fi network (`NOT_VPN`), чтобы активный Android VPN не перехватывал management traffic;
+- IP/port в пользовательском статусе не показываются;
+- статус: цветной круг + короткая строка;
+- зеленый — `Устройство подключено`;
+- желтый — `Подключение к устройству`;
+- красный — `Ошибка подключения`;
+- серый — `Сервер недоступен`;
+- Wi-Fi password/config UI отсутствует;
+- `SCAN` открывает экран выбора target AP;
+- `START/STOP` — одна stateful-кнопка;
+- выбранный BSSID/channel/ESSID сохраняется локально на Android;
+- верхняя панель использует launcher icon AIRTOOLS, light/dark и RU/EN controls.
 
-- One AP/BSSID keeps one latest handshake file.
-- A newer handshake for the same BSSID replaces the previous one.
-- AP count should be bounded by FIFO cleanup.
-- `/tmp` is RAM-backed, so this storage is not persistent across power loss.
-
-## Android Client
-
-Project:
-
-```text
-D:\PROJECTS\AIRTOOLS
-```
-
-Known status:
-
-```text
-:app:compileDebugKotlin -> BUILD SUCCESSFUL
-```
-
-Client layer includes:
-
-```text
-AirtoolsRepository.status()
-AirtoolsRepository.wifiStatus()
-AirtoolsRepository.setWifi(...)
-handshake list commands
-generic command calls
-```
-
-Still needed on Android:
-
-- Device/status screen.
-- Capture mode controls.
-- Channel/BSSID selection.
-- Handshake list and download.
-- Aireplay control/status screen.
-
-## Operational Notes
-
-BusyBox in firmware does not support every desktop option. In particular, avoid assuming `grep -E` exists in runtime diagnostics; use simpler `grep`/`sed` patterns.
-
-The temporary TFTP server used during final flashing was stopped after verification.
+`assembleDebug` проходит. Полная end-to-end проверка нового TCP API требует физической проверки нового `mtd4` candidate.

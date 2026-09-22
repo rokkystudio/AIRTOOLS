@@ -20,7 +20,7 @@ import zlib
 from pathlib import Path
 
 
-ROOT = Path(r"D:\PROJECTS\ENDOSCOPE")
+ROOT = Path(r"D:\PROJECTS\AIRTOOLS")
 ORIGINAL = ROOT / "dumps" / "original" / "mtd4_kernel.bin"
 DEFAULT_MODIFIED = ROOT / "dumps" / "modified" / "mtd4_connectivity.bin"
 SERVICE = ROOT / "artifacts" / "binaries" / "mipsel" / "endoscope-connectivity"

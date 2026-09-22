@@ -1,8 +1,8 @@
-﻿from pathlib import Path
+from pathlib import Path
 import ctypes, hashlib, time, sys
 from ctypes import wintypes
 
-ROOT=Path(r'D:\PROJECTS\ENDOSCOPE')
+ROOT=Path(r'D:\PROJECTS\AIRTOOLS')
 IMG=ROOT/r'dumps\original\mtd1_bootloader.bin'
 OUTDIR=ROOT/r'dumps\ch341_direct_restore_original'
 OUTDIR.mkdir(parents=True, exist_ok=True)

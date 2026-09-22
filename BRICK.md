@@ -21,9 +21,9 @@ mtd3 Factory
 Текущий проверенный `mtd4`:
 
 ```text
-dumps\verified\mtd4_at_wpa2_airtools_wn723n_20260920.bin
+dumps\verified\mtd4_airtools_tcp_scan_20260922.bin
 size:   3866624
-sha256: 7443772442fbbc038305f75659d8b628b319b1da73f99f699a43904f8271124d
+sha256: ab20813ee4bb9f58a96ec5c246431af901ec0249f3d645c17bcda74195d05673
 ```
 
 Known-good bootloader:
@@ -65,8 +65,8 @@ Smoke test после загрузки:
 ping 192.168.10.123
 TCP_23 open
 TCP_80 open
-/status over UDP/8088
-/wifi/status over UDP/8088
+/status over TCP/8088
+/wifi/status over TCP/8088
 wlan0 type == 803
 ```
 

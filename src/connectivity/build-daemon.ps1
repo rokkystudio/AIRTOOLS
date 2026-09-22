@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$Root = 'D:\PROJECTS\ENDOSCOPE'
+$Root = 'D:\PROJECTS\AIRTOOLS'
 & (Join-Path $Root 'scripts\build\prepare-llvm.ps1')
 $SourceDir = Join-Path $Root 'src\connectivity'
 $LlvmBin = Join-Path $Root 'toolchain\llvm\mingw64\bin'

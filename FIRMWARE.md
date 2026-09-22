@@ -1,13 +1,13 @@
-# ENDOSCOPE Firmware Workflow
+# AIRTOOLS Firmware Workflow
 
 Этот файл описывает текущий рабочий путь для `mtd4` firmware. Bootloader/config/factory не являются частью обычного firmware update. Правила безопасности flash/recovery находятся в [BRICK.md](BRICK.md).
 
 ## Текущий рабочий образ
 
 ```text
-path:   dumps\verified\mtd4_at_wpa2_airtools_wn723n_20260920.bin
+path:   dumps\verified\mtd4_airtools_tcp_scan_20260922.bin
 size:   3866624
-sha256: 7443772442fbbc038305f75659d8b628b319b1da73f99f699a43904f8271124d
+sha256: ab20813ee4bb9f58a96ec5c246431af901ec0249f3d645c17bcda74195d05673
 ```
 
 Этот образ прошит и проверен. После reboot U-Boot распаковал uImage, checksum прошел, Linux стартовал.
@@ -95,7 +95,7 @@ LINUX started
 - TFTP transfer проверен по размеру.
 - `mtd_write` пишет только `Kernel`.
 - Reboot выполняется только после `MTD_WRITE_RET:0` и `SYNC_DONE`.
-- После загрузки проверяются Wi-Fi, telnet/http и airtools UDP.
+- После загрузки проверяются Wi-Fi, telnet/http и airtools TCP.
 
 ## Recovery
 
