@@ -12,6 +12,7 @@ extern int sys_open(const char *path, unsigned int flags, unsigned int mode);
 extern int sys_read(int fd, void *buffer, unsigned int count);
 extern int sys_mkdir(const char *path, unsigned int mode);
 extern int sys_unlink(const char *path);
+extern int sys_gettimeofday(void *timeval, void *timezone);
 extern void sys_exit(int status);
 
 #define AF_PACKET 17
@@ -19,6 +20,7 @@ extern void sys_exit(int status);
 #define ETH_P_ALL_NETWORK_ORDER 0x0300
 #define SIOCGIFINDEX 0x8933
 
+#define O_RDONLY 0x0000
 #define O_WRONLY 0x0001
 #define O_CREAT  0x0100
 #define O_TRUNC  0x0200
@@ -31,6 +33,11 @@ extern void sys_exit(int status);
 #define HS_STORE_DIR "/tmp/airhs"
 #define HS_INDEX_PATH "/tmp/airhs/index.txt"
 #define NETWORK_INDEX_PATH "/tmp/airscan-networks.txt"
+
+struct timeval32 {
+    u32 seconds;
+    u32 microseconds;
+};
 
 struct stored_frame {
     u16 length;
@@ -55,6 +62,7 @@ struct ap_info {
     u8 hs_frame_count;
     u8 hs_file[32];
     u32 hs_tick;
+    u32 hs_epoch;
     struct stored_frame hs_frames[HS_FRAMES];
 };
 
@@ -177,6 +185,18 @@ static unsigned int str_len(const char *text)
     while (text[length] != 0)
         length++;
     return length;
+}
+
+static void copy_text(char *destination, unsigned int destination_size, const char *source)
+{
+    unsigned int index = 0;
+    if (destination_size == 0)
+        return;
+    while (source[index] != 0 && index + 1 < destination_size) {
+        destination[index] = source[index];
+        index++;
+    }
+    destination[index] = 0;
 }
 
 static int parse_uint(const char *text, unsigned int *value)
@@ -469,9 +489,129 @@ static void write_u32_le(int fd, u32 value)
     sys_write(fd, data, 4);
 }
 
+static u32 current_epoch(void)
+{
+    struct timeval32 timeval;
+    timeval.seconds = 0;
+    timeval.microseconds = 0;
+    if (sys_gettimeofday(&timeval, 0) != 0)
+        return 0;
+    if (timeval.seconds < 1600000000U)
+        return 0;
+    return timeval.seconds;
+}
+
+/* Restores saved handshake metadata so restarting airodump does not make PCAP files disappear from the index. */
+static void load_handshake_index(void)
+{
+    char buffer[2048];
+    int fd;
+    int length;
+    unsigned int line_start = 0;
+
+    fd = sys_open(HS_INDEX_PATH, O_RDONLY, 0);
+    if (fd < 0)
+        return;
+    length = sys_read(fd, buffer, sizeof(buffer) - 1);
+    sys_close(fd);
+    if (length <= 0)
+        return;
+    buffer[length] = 0;
+
+    while (line_start < (unsigned int)length) {
+        char *fields[6];
+        unsigned int field_count = 1;
+        unsigned int line_end = line_start;
+        unsigned int cursor;
+        unsigned int stored_tick;
+        unsigned int captured_epoch = 0;
+        unsigned int frames;
+        char *bssid_text_field;
+        char *file_field;
+        char *essid_field;
+        struct ap_info *ap;
+        int file_fd;
+
+        while (line_end < (unsigned int)length && buffer[line_end] != '\n' && buffer[line_end] != '\r')
+            line_end++;
+        buffer[line_end] = 0;
+        while (line_end + 1 < (unsigned int)length && (buffer[line_end + 1] == '\n' || buffer[line_end + 1] == '\r'))
+            line_end++;
+        if (buffer[line_start] == 0 || buffer[line_start] == '#') {
+            line_start = line_end + 1;
+            continue;
+        }
+
+        fields[0] = buffer + line_start;
+        for (cursor = line_start; cursor < line_end && field_count < 6; cursor++) {
+            if (buffer[cursor] == ',') {
+                buffer[cursor] = 0;
+                fields[field_count++] = buffer + cursor + 1;
+            }
+        }
+
+        if (field_count >= 6) {
+            bssid_text_field = fields[0];
+            if (parse_uint(fields[1], &stored_tick) != 0 || parse_uint(fields[2], &captured_epoch) != 0 ||
+                parse_uint(fields[3], &frames) != 0) {
+                line_start = line_end + 1;
+                continue;
+            }
+            file_field = fields[4];
+            essid_field = fields[5];
+        } else if (field_count >= 5) {
+            bssid_text_field = fields[0];
+            if (parse_uint(fields[1], &stored_tick) != 0 || parse_uint(fields[2], &frames) != 0) {
+                line_start = line_end + 1;
+                continue;
+            }
+            file_field = fields[3];
+            essid_field = fields[4];
+        } else {
+            line_start = line_end + 1;
+            continue;
+        }
+
+        file_fd = sys_open(file_field, O_RDONLY, 0);
+        if (file_fd < 0) {
+            line_start = line_end + 1;
+            continue;
+        }
+        sys_close(file_fd);
+
+        {
+            u8 bssid[6];
+            if (parse_mac_text(bssid_text_field, bssid) != 0) {
+                line_start = line_end + 1;
+                continue;
+            }
+            ap = find_ap(bssid);
+        }
+        if (!ap) {
+            line_start = line_end + 1;
+            continue;
+        }
+
+        ap->hs_saved = 1;
+        ap->hs_tick = stored_tick;
+        ap->hs_epoch = captured_epoch;
+        ap->hs_frame_count = frames > HS_FRAMES ? HS_FRAMES : (u8)frames;
+        copy_text((char *)ap->hs_file, sizeof(ap->hs_file), file_field);
+        if (!str_equal(essid_field, "<hidden/unknown>")) {
+            copy_text(ap->ssid, sizeof(ap->ssid), essid_field);
+            ap->ssid_len = (u8)str_len(ap->ssid);
+        }
+        handshake_count++;
+        if (stored_tick > storage_tick)
+            storage_tick = stored_tick;
+
+        line_start = line_end + 1;
+    }
+}
+
 static void rewrite_index(void)
 {
-    char line[160];
+    char line[180];
     unsigned int index;
     int fd;
 
@@ -480,7 +620,7 @@ static void rewrite_index(void)
         return;
 
     {
-        const char *header = "# bssid,stored_tick,frames,file,essid\n";
+        const char *header = "# bssid,stored_tick,captured_epoch,frames,file,essid\n";
         sys_write(fd, header, str_len(header));
     }
     for (index = 0; index < MAX_APS; index++) {
@@ -491,6 +631,8 @@ static void rewrite_index(void)
         append_mac_colon(line, &offset, sizeof(line), ap->bssid);
         append_char(line, &offset, sizeof(line), ',');
         append_dec(line, &offset, sizeof(line), ap->hs_tick);
+        append_char(line, &offset, sizeof(line), ',');
+        append_dec(line, &offset, sizeof(line), ap->hs_epoch);
         append_char(line, &offset, sizeof(line), ',');
         append_dec(line, &offset, sizeof(line), ap->hs_frame_count);
         append_char(line, &offset, sizeof(line), ',');
@@ -551,6 +693,8 @@ static void save_handshake(struct ap_info *ap)
     char path[64];
     int fd;
     unsigned int index;
+    u32 captured_epoch;
+    u32 stored_tick;
 
     if (!ap || ap->hs_frame_count < 2)
         return;
@@ -559,6 +703,8 @@ static void save_handshake(struct ap_info *ap)
     evict_oldest_if_needed(ap);
     build_hs_file_path(ap, path, sizeof(path));
 
+    captured_epoch = current_epoch();
+    stored_tick = storage_tick + 1;
     fd = sys_open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0) {
         write_text("HANDSHAKE_SAVE_ERROR bssid=");
@@ -577,7 +723,7 @@ static void save_handshake(struct ap_info *ap)
 
     for (index = 0; index < ap->hs_frame_count; index++) {
         struct stored_frame *stored = &ap->hs_frames[index];
-        write_u32_le(fd, storage_tick + index);
+        write_u32_le(fd, captured_epoch ? captured_epoch + index : stored_tick + index);
         write_u32_le(fd, 0);
         write_u32_le(fd, stored->length);
         write_u32_le(fd, stored->length);
@@ -588,7 +734,9 @@ static void save_handshake(struct ap_info *ap)
     if (!ap->hs_saved)
         handshake_count++;
     ap->hs_saved = 1;
-    ap->hs_tick = ++storage_tick;
+    ap->hs_tick = stored_tick;
+    ap->hs_epoch = captured_epoch;
+    storage_tick = stored_tick;
     build_hs_file_path(ap, (char *)ap->hs_file, sizeof(ap->hs_file));
     rewrite_index();
 
@@ -886,6 +1034,7 @@ static int run_dump(unsigned int target_frames)
     }
 
     sys_mkdir(HS_STORE_DIR, 0755);
+    load_handshake_index();
     rewrite_index();
     rewrite_network_index();
 

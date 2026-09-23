@@ -49,6 +49,8 @@ Android TCP sockets привязываются к физической Wi-Fi net
 /start
 /stop
 /handshakes
+/handshake/download?file=<12-hex>.pcap
+/replay
 /aireplay?mode=test&count=1
 ```
 
@@ -109,10 +111,24 @@ Handshake storage:
 /tmp/airhs/index.txt
 ```
 
-Один BSSID хранит один последний handshake PCAP. Новый handshake заменяет предыдущий для того же BSSID. `/handshakes` возвращает index; Android показывает live состояние handshake на экране выбранной сети. Передача самого `.pcap` через control API пока не реализована.
+Один BSSID хранит один последний handshake PCAP. Новый handshake заменяет предыдущий для того же BSSID. `/handshakes` возвращает index; Android сохраняет самый новый `stored_tick` для BSSID и добавляет время захвата. Если firmware отдаёт валидный `captured_epoch`, используется он; если системные часы устройства недостоверны, Android фиксирует момент первого появления нового `stored_tick`.
+
+`airodump` при старте восстанавливает существующий `/tmp/airhs/index.txt`, поэтому перезапуск capture больше не очищает список при наличии PCAP-файлов в RAM.
+
+`/handshake/download?file=<12-hex>.pcap` проверяет имя по формату файла из handshake index, открывает файл только в `/tmp/airhs` и передаёт `OK handshake bytes=<N>\n` перед бинарным содержимым PCAP. Android читает ровно `N` байт и стримит файл прямо в `Downloads/Airtools` через MediaStore на Android 10 и новее.
 
 ## Flash safety
 
 Обычные firmware изменения относятся только к `Kernel/mtd4`. Без отдельного решения нельзя писать `mtd1` Bootloader, `mtd2` Config и `mtd3` Factory.
 
 Перед reboot после flash нужно проверить содержимое записанного `mtd4`; для текущего образа физическая проверка дала `FLASH_OK`.
+
+## Replay
+
+`/replay` работает только в capture mode и использует текущий BSSID устройства. Команда запускает существующий `aireplay` как:
+
+```text
+aireplay -0 5 <current-bssid>
+```
+
+Android-кнопка REPLAY на capture-экране вызывает именно этот endpoint, временно блокирует команды и показывает статус отправки.

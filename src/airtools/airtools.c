@@ -65,6 +65,7 @@ static char ssid_text[40];
 static char wifi_ssid_text[33];
 static char wifi_pass_text[64];
 static char state_line[96];
+static char handshake_download_path[64];
 static char *empty_envp[] = { 0 };
 
 static void zero_bytes(u8 *data, unsigned int length)
@@ -572,13 +573,25 @@ static int start_discovery_scan(void)
     return 0;
 }
 
+static int run_aireplay_argv(char *const argv[])
+{
+    int pid = sys_fork();
+    if (pid < 0)
+        return 32;
+    if (pid == 0) {
+        child_redirect_devnull();
+        exec_path_pair("/bin/aireplay", "/tmp/aireplay", argv);
+    }
+    sys_waitpid(pid, 0, 0);
+    return 0;
+}
+
 static int spawn_aireplay_from_path(const char *path)
 {
     char mode[16];
     char value[64];
     char *argv[8];
     unsigned int argc = 0;
-    int pid;
 
     if (!get_query_value(path, "mode", mode, sizeof(mode)))
         copy_string(mode, sizeof(mode), "test");
@@ -605,16 +618,35 @@ static int spawn_aireplay_from_path(const char *path)
     }
     argv[argc] = 0;
 
-    pid = sys_fork();
-    if (pid < 0)
+    if (run_aireplay_argv(argv) != 0)
         return 32;
-    if (pid == 0) {
-        child_redirect_devnull();
-        exec_path_pair("/bin/aireplay", "/tmp/aireplay", argv);
-    }
-    sys_waitpid(pid, 0, 0);
     response_append("OK aireplay mode=");
     response_append(mode);
+    response_append("\n");
+    return 0;
+}
+
+/* Runs REPLAY as aireplay -0 5 against the current capture BSSID. */
+static int spawn_replay_from_capture(void)
+{
+    char *argv[5];
+    if (current_state.mode != 1) {
+        response_append("ERR replay requires capture\n");
+        return 33;
+    }
+
+    mac_to_text(bssid_text, current_state.bssid);
+    copy_string(count_text, sizeof(count_text), "5");
+    argv[0] = (char *)"aireplay";
+    argv[1] = (char *)"-0";
+    argv[2] = count_text;
+    argv[3] = bssid_text;
+    argv[4] = 0;
+
+    if (run_aireplay_argv(argv) != 0)
+        return 32;
+    response_append("OK replay deauth count=5 bssid=");
+    response_append(bssid_text);
     response_append("\n");
     return 0;
 }
@@ -801,10 +833,12 @@ static void append_file(const char *path)
     sys_close(fd);
 }
 
+/* Dispatches one control command and selects text or binary response handling. */
 static int handle_request(const char *path)
 {
     int status = 0;
     response_reset();
+    handshake_download_path[0] = 0;
 
     if (starts_with(path, "/wifi"))
         return handle_wifi_request(path);
@@ -859,11 +893,37 @@ static int handle_request(const char *path)
         response_append("OK stop\n");
         return 0;
     }
+    if (starts_with(path, "/handshake/download")) {
+        char file[24];
+        unsigned int index;
+        unsigned int offset;
+        if (!get_query_value(path, "file", file, sizeof(file)) || str_len(file) != 17 ||
+            !str_equal(file + 12, ".pcap")) {
+            response_append("ERR handshake invalid file\n");
+            return 60;
+        }
+        for (index = 0; index < 12; index++) {
+            char value = file[index];
+            if (!((value >= '0' && value <= '9') || (value >= 'a' && value <= 'f') ||
+                  (value >= 'A' && value <= 'F'))) {
+                response_append("ERR handshake invalid file\n");
+                return 60;
+            }
+        }
+        copy_string(handshake_download_path, sizeof(handshake_download_path), "/tmp/airhs/");
+        offset = str_len(handshake_download_path);
+        for (index = 0; index < str_len(file) && offset + 1 < sizeof(handshake_download_path); index++)
+            handshake_download_path[offset++] = file[index];
+        handshake_download_path[offset] = 0;
+        return 0;
+    }
     if (starts_with(path, "/handshakes")) {
         response_append("OK handshakes\n");
         append_file(AIRHS_INDEX);
         return 0;
     }
+    if (starts_with(path, "/replay"))
+        return spawn_replay_from_capture();
     if (starts_with(path, "/aireplay"))
         return spawn_aireplay_from_path(path);
 
@@ -883,8 +943,55 @@ static int write_all(int fd, const char *buffer, unsigned int length)
     return 0;
 }
 
+static unsigned int file_size(const char *path)
+{
+    int fd = sys_open(path, O_RDONLY, 0);
+    char buffer[512];
+    unsigned int total = 0;
+    if (fd < 0)
+        return 0;
+    for (;;) {
+        int length = sys_read(fd, buffer, sizeof(buffer));
+        if (length <= 0)
+            break;
+        total += (unsigned int)length;
+    }
+    sys_close(fd);
+    return total;
+}
+
+/* Sends a validated handshake file as a size-framed raw PCAP stream or a text response. */
 static void send_response(int client_fd, int status)
 {
+    if (handshake_download_path[0]) {
+        int fd;
+        char buffer[512];
+        int length;
+        unsigned int total = file_size(handshake_download_path);
+        fd = sys_open(handshake_download_path, O_RDONLY, 0);
+        if (fd < 0 || total == 0) {
+            if (fd >= 0)
+                sys_close(fd);
+            response_append("ERR handshake missing\n");
+            write_all(client_fd, response_buffer, response_length);
+            return;
+        }
+        response_reset();
+        response_append("OK handshake bytes=");
+        response_append_dec(total);
+        response_append("\n");
+        if (write_all(client_fd, response_buffer, response_length) != 0) {
+            sys_close(fd);
+            return;
+        }
+        for (;;) {
+            length = sys_read(fd, buffer, sizeof(buffer));
+            if (length <= 0 || write_all(client_fd, buffer, (unsigned int)length) != 0)
+                break;
+        }
+        sys_close(fd);
+        return;
+    }
     if (status != 0) {
         response_append("ERR status=");
         response_append_dec((unsigned int)status);
