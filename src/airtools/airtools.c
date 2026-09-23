@@ -40,6 +40,7 @@ extern void sys_exit(int status);
 #define STATE_PATH "/tmp/airtools.state"
 #define AIRHS_INDEX "/tmp/airhs/index.txt"
 #define AIRSCAN_INDEX "/tmp/airscan-networks.txt"
+#define AIRCLIENT_INDEX "/tmp/airscan-clients.txt"
 
 struct mode_state {
     u8 mode;       /* 0=all, 1=bssid */
@@ -626,27 +627,40 @@ static int spawn_aireplay_from_path(const char *path)
     return 0;
 }
 
-/* Runs REPLAY as aireplay -0 5 against the current capture BSSID. */
-static int spawn_replay_from_capture(void)
+/* Runs REPLAY as aireplay -0 5 against the current capture BSSID and optional station. */
+static int spawn_replay_from_capture(const char *path)
 {
-    char *argv[5];
+    char *argv[6];
+    unsigned int argc = 0;
+    char station_text_local[18];
     if (current_state.mode != 1) {
         response_append("ERR replay requires capture\n");
         return 33;
     }
 
     mac_to_text(bssid_text, current_state.bssid);
-    copy_string(count_text, sizeof(count_text), "5");
-    argv[0] = (char *)"aireplay";
-    argv[1] = (char *)"-0";
-    argv[2] = count_text;
-    argv[3] = bssid_text;
-    argv[4] = 0;
+    argv[argc++] = (char *)"aireplay";
+    argv[argc++] = (char *)"-0";
+    argv[argc++] = (char *)"5";
+    argv[argc++] = bssid_text;
+    if (get_query_value(path, "station", station_text_local, sizeof(station_text_local))) {
+        u8 station[6];
+        if (parse_mac(station_text_local, station) != 0) {
+            response_append("ERR replay invalid station\n");
+            return 34;
+        }
+        argv[argc++] = station_text_local;
+    }
+    argv[argc] = 0;
 
     if (run_aireplay_argv(argv) != 0)
         return 32;
     response_append("OK replay deauth count=5 bssid=");
     response_append(bssid_text);
+    if (argc > 4) {
+        response_append(" station=");
+        response_append(station_text_local);
+    }
     response_append("\n");
     return 0;
 }
@@ -809,16 +823,14 @@ static void append_status(void)
     response_append("\n");
 }
 
-static void append_file(const char *path)
+static int append_file(const char *path)
 {
     int fd;
     int length;
     char buffer[512];
     fd = sys_open(path, O_RDONLY, 0);
-    if (fd < 0) {
-        response_append("ERR open\n");
-        return;
-    }
+    if (fd < 0)
+        return -1;
     for (;;) {
         length = sys_read(fd, buffer, sizeof(buffer));
         if (length <= 0)
@@ -831,6 +843,7 @@ static void append_file(const char *path)
             break;
     }
     sys_close(fd);
+    return 0;
 }
 
 /* Dispatches one control command and selects text or binary response handling. */
@@ -919,11 +932,18 @@ static int handle_request(const char *path)
     }
     if (starts_with(path, "/handshakes")) {
         response_append("OK handshakes\n");
-        append_file(AIRHS_INDEX);
+        if (append_file(AIRHS_INDEX) != 0)
+            response_append("# bssid,stored_tick,captured_epoch,generation,frames,file,essid\n");
+        return 0;
+    }
+    if (starts_with(path, "/clients")) {
+        response_append("OK clients\n");
+        if (append_file(AIRCLIENT_INDEX) != 0)
+            response_append("# bssid,station,signal_dbm,frames,last_seen\n");
         return 0;
     }
     if (starts_with(path, "/replay"))
-        return spawn_replay_from_capture();
+        return spawn_replay_from_capture(path);
     if (starts_with(path, "/aireplay"))
         return spawn_aireplay_from_path(path);
 

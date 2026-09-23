@@ -50,7 +50,8 @@ Android TCP sockets привязываются к физической Wi-Fi net
 /stop
 /handshakes
 /handshake/download?file=<12-hex>.pcap
-/replay
+/clients
+/replay?station=<client-mac>
 /aireplay?mode=test&count=1
 ```
 
@@ -125,10 +126,39 @@ Handshake storage:
 
 ## Replay
 
-`/replay` работает только в capture mode и использует текущий BSSID устройства. Команда запускает существующий `aireplay` как:
+`/replay` работает только в capture mode и использует текущий BSSID устройства. Без `station` команда запускает общий deauth, а с `station=<client-mac>` адресует replay конкретному клиенту:
 
 ```text
-aireplay -0 5 <current-bssid>
+aireplay -0 5 <current-bssid> [station]
 ```
 
 Android-кнопка REPLAY на capture-экране вызывает именно этот endpoint, временно блокирует команды и показывает статус отправки.
+## Capture clients, replay и handshake generation
+
+В target capture `airodump` дополнительно ведёт runtime index клиентов:
+
+```text
+/tmp/airscan-clients.txt
+# bssid,station,signal_dbm,frames,last_seen
+```
+
+`/clients` отдаёт этот индекс через тот же TCP/8088 control service. Если файл ещё не создан, это не ошибка: endpoint возвращает `OK clients` и пустой header. Android фильтрует строки по выбранному BSSID и показывает клиентов на capture-экране с PC-иконкой и отдельной icon-only replay-кнопкой.
+
+Replay для клиента идёт через:
+
+```text
+/replay?station=<client-mac>
+aireplay -0 5 <current-bssid> <client-mac>
+```
+
+То есть кнопка клиента делает ровно 5 deauth-пакетов, а не бесконечный replay. Низкоуровневый `/replay` без `station` оставлен для общего deauth по выбранному BSSID.
+
+Handshake index теперь имеет поколение сохранённого PCAP:
+
+```text
+# bssid,stored_tick,captured_epoch,generation,frames,file,essid
+```
+
+Устройство хранит один последний PCAP на BSSID, поэтому `generation` показывает номер замены/сохранения handshake для этой сети. Это надёжнее, чем время устройства: часы на девайсе могут быть недостоверны. Android показывает `Получен #<generation>` и локальное время первого появления этого поколения handshake. Если устройство отдаёт валидный `captured_epoch`, приложение может использовать его, но свежесть определяется именно новым `generation`/`stored_tick`.
+
+Передача PCAP по тому же TCP-сервису остаётся нормальной архитектурой для текущего размера файлов: `/handshake/download` отдаёт size-framed ответ `OK handshake bytes=<N>` и затем ровно `N` байт PCAP. Отдельный файловый сервер для этого не нужен.

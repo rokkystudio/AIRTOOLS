@@ -26,6 +26,7 @@ extern void sys_exit(int status);
 #define O_TRUNC  0x0200
 
 #define MAX_APS 24
+#define MAX_CLIENTS 32
 #define MAX_SSID 32
 #define MAX_HANDSHAKES 16
 #define HS_FRAMES 6
@@ -33,6 +34,7 @@ extern void sys_exit(int status);
 #define HS_STORE_DIR "/tmp/airhs"
 #define HS_INDEX_PATH "/tmp/airhs/index.txt"
 #define NETWORK_INDEX_PATH "/tmp/airscan-networks.txt"
+#define CLIENT_INDEX_PATH "/tmp/airscan-clients.txt"
 
 struct timeval32 {
     u32 seconds;
@@ -63,10 +65,22 @@ struct ap_info {
     u8 hs_file[32];
     u32 hs_tick;
     u32 hs_epoch;
+    u32 hs_generation;
     struct stored_frame hs_frames[HS_FRAMES];
 };
 
+struct client_info {
+    u8 used;
+    u8 bssid[6];
+    u8 station[6];
+    u8 has_signal;
+    int signal_dbm;
+    u32 frames;
+    u32 last_seen;
+};
+
 static struct ap_info aps[MAX_APS];
+static struct client_info clients[MAX_CLIENTS];
 static u32 total_frames;
 static u32 mgmt_frames;
 static u32 ctrl_frames;
@@ -168,6 +182,11 @@ static int is_broadcast(const u8 *mac)
     return mac_equal(mac, broadcast_mac);
 }
 
+static int is_multicast(const u8 *mac)
+{
+    return (mac[0] & 0x01) != 0;
+}
+
 static int str_equal(const char *left, const char *right)
 {
     unsigned int index = 0;
@@ -208,9 +227,12 @@ static int parse_uint(const char *text, unsigned int *value)
     while (text[index] != 0) {
         if (text[index] < '0' || text[index] > '9')
             return -1;
-        if (result > 1000000U)
-            return -1;
-        result = result * 10U + (unsigned int)(text[index] - '0');
+        {
+            unsigned int digit = (unsigned int)(text[index] - '0');
+            if (result > 429496729U || (result == 429496729U && digit > 5U))
+                return -1;
+            result = result * 10U + digit;
+        }
         index++;
     }
     *value = result;
@@ -519,12 +541,13 @@ static void load_handshake_index(void)
     buffer[length] = 0;
 
     while (line_start < (unsigned int)length) {
-        char *fields[6];
+        char *fields[7];
         unsigned int field_count = 1;
         unsigned int line_end = line_start;
         unsigned int cursor;
         unsigned int stored_tick;
         unsigned int captured_epoch = 0;
+        unsigned int generation = 1;
         unsigned int frames;
         char *bssid_text_field;
         char *file_field;
@@ -543,14 +566,23 @@ static void load_handshake_index(void)
         }
 
         fields[0] = buffer + line_start;
-        for (cursor = line_start; cursor < line_end && field_count < 6; cursor++) {
+        for (cursor = line_start; cursor < line_end && field_count < 7; cursor++) {
             if (buffer[cursor] == ',') {
                 buffer[cursor] = 0;
                 fields[field_count++] = buffer + cursor + 1;
             }
         }
 
-        if (field_count >= 6) {
+        if (field_count >= 7) {
+            bssid_text_field = fields[0];
+            if (parse_uint(fields[1], &stored_tick) != 0 || parse_uint(fields[2], &captured_epoch) != 0 ||
+                parse_uint(fields[3], &generation) != 0 || parse_uint(fields[4], &frames) != 0) {
+                line_start = line_end + 1;
+                continue;
+            }
+            file_field = fields[5];
+            essid_field = fields[6];
+        } else if (field_count >= 6) {
             bssid_text_field = fields[0];
             if (parse_uint(fields[1], &stored_tick) != 0 || parse_uint(fields[2], &captured_epoch) != 0 ||
                 parse_uint(fields[3], &frames) != 0) {
@@ -595,6 +627,7 @@ static void load_handshake_index(void)
         ap->hs_saved = 1;
         ap->hs_tick = stored_tick;
         ap->hs_epoch = captured_epoch;
+        ap->hs_generation = generation ? generation : 1;
         ap->hs_frame_count = frames > HS_FRAMES ? HS_FRAMES : (u8)frames;
         copy_text((char *)ap->hs_file, sizeof(ap->hs_file), file_field);
         if (!str_equal(essid_field, "<hidden/unknown>")) {
@@ -611,7 +644,7 @@ static void load_handshake_index(void)
 
 static void rewrite_index(void)
 {
-    char line[180];
+    char line[200];
     unsigned int index;
     int fd;
 
@@ -620,7 +653,7 @@ static void rewrite_index(void)
         return;
 
     {
-        const char *header = "# bssid,stored_tick,captured_epoch,frames,file,essid\n";
+        const char *header = "# bssid,stored_tick,captured_epoch,generation,frames,file,essid\n";
         sys_write(fd, header, str_len(header));
     }
     for (index = 0; index < MAX_APS; index++) {
@@ -633,6 +666,8 @@ static void rewrite_index(void)
         append_dec(line, &offset, sizeof(line), ap->hs_tick);
         append_char(line, &offset, sizeof(line), ',');
         append_dec(line, &offset, sizeof(line), ap->hs_epoch);
+        append_char(line, &offset, sizeof(line), ',');
+        append_dec(line, &offset, sizeof(line), ap->hs_generation ? ap->hs_generation : 1);
         append_char(line, &offset, sizeof(line), ',');
         append_dec(line, &offset, sizeof(line), ap->hs_frame_count);
         append_char(line, &offset, sizeof(line), ',');
@@ -688,6 +723,76 @@ static void rewrite_network_index(void)
     }
     sys_close(fd);
 }
+
+/* Records client stations seen in data frames so the capture UI can replay a selected client. */
+static struct client_info *find_client(const u8 *bssid, const u8 *station)
+{
+    unsigned int index;
+    struct client_info *empty = 0;
+    for (index = 0; index < MAX_CLIENTS; index++) {
+        struct client_info *client = &clients[index];
+        if (client->used && mac_equal(client->bssid, bssid) && mac_equal(client->station, station))
+            return client;
+        if (!client->used && !empty)
+            empty = client;
+    }
+    return empty;
+}
+
+static void record_client(const u8 *bssid, const u8 *station, int has_signal, int signal_dbm)
+{
+    struct client_info *client;
+    if (!bssid || !station || is_broadcast(station) || is_multicast(station))
+        return;
+    client = find_client(bssid, station);
+    if (!client)
+        return;
+    if (!client->used) {
+        client->used = 1;
+        copy_mac(client->bssid, bssid);
+        copy_mac(client->station, station);
+    }
+    client->frames++;
+    client->last_seen = total_frames;
+    if (has_signal) {
+        client->has_signal = 1;
+        client->signal_dbm = signal_dbm;
+    }
+}
+
+static void rewrite_client_index(void)
+{
+    char line[128];
+    unsigned int index;
+    int fd = sys_open(CLIENT_INDEX_PATH, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0)
+        return;
+    {
+        const char *header = "# bssid,station,signal_dbm,frames,last_seen\n";
+        sys_write(fd, header, str_len(header));
+    }
+    for (index = 0; index < MAX_CLIENTS; index++) {
+        struct client_info *client = &clients[index];
+        unsigned int offset = 0;
+        if (!client->used)
+            continue;
+        append_mac_colon(line, &offset, sizeof(line), client->bssid);
+        append_char(line, &offset, sizeof(line), ',');
+        append_mac_colon(line, &offset, sizeof(line), client->station);
+        append_char(line, &offset, sizeof(line), ',');
+        if (client->has_signal)
+            append_signed_dec(line, &offset, sizeof(line), client->signal_dbm);
+        else
+            append_text(line, &offset, sizeof(line), "0");
+        append_char(line, &offset, sizeof(line), ',');
+        append_dec(line, &offset, sizeof(line), client->frames);
+        append_char(line, &offset, sizeof(line), ',');
+        append_dec(line, &offset, sizeof(line), client->last_seen);
+        append_char(line, &offset, sizeof(line), '\n');
+        sys_write(fd, line, offset);
+    }
+    sys_close(fd);
+}
 static void save_handshake(struct ap_info *ap)
 {
     char path[64];
@@ -736,6 +841,10 @@ static void save_handshake(struct ap_info *ap)
     ap->hs_saved = 1;
     ap->hs_tick = stored_tick;
     ap->hs_epoch = captured_epoch;
+    if (ap->hs_generation == 0 || ap->hs_generation == 0xffffffffU)
+        ap->hs_generation = 1;
+    else
+        ap->hs_generation++;
     storage_tick = stored_tick;
     build_hs_file_path(ap, (char *)ap->hs_file, sizeof(ap->hs_file));
     rewrite_index();
@@ -746,6 +855,8 @@ static void save_handshake(struct ap_info *ap)
     write_text((const char *)ap->hs_file);
     write_text(" frames=");
     write_dec(ap->hs_frame_count);
+    write_text(" generation=");
+    write_dec(ap->hs_generation);
     write_text(" stored=");
     write_dec(handshake_count);
     write_text("\n");
@@ -846,9 +957,21 @@ static const u8 *get_bssid_from_data(const u8 *body)
     return body + 16;
 }
 
-static void handle_data(const u8 *frame, unsigned int frame_length, const u8 *body, unsigned int length, int has_signal, int signal_dbm)
+static const u8 *get_station_from_data(const u8 *body)
+{
+    u8 to_ds = body[1] & 0x01;
+    u8 from_ds = body[1] & 0x02;
+    if (to_ds && !from_ds)
+        return body + 10;
+    if (!to_ds && from_ds)
+        return body + 4;
+    return 0;
+}
+static void handle_data
+(const u8 *frame, unsigned int frame_length, const u8 *body, unsigned int length, int has_signal, int signal_dbm)
 {
     const u8 *bssid;
+    const u8 *station;
     struct ap_info *ap;
     unsigned int header_length;
     const u8 *payload;
@@ -861,6 +984,8 @@ static void handle_data(const u8 *frame, unsigned int frame_length, const u8 *bo
     bssid = get_bssid_from_data(body);
     if (is_broadcast(bssid) || !filter_accept_bssid(bssid))
         return;
+    station = get_station_from_data(body);
+    record_client(bssid, station, has_signal, signal_dbm);
     ap = find_ap(bssid);
     if (ap) {
         ap->data++;
@@ -963,6 +1088,7 @@ static void print_table(void)
 {
     unsigned int index;
     rewrite_network_index();
+    rewrite_client_index();
     write_text("\nBSSID              CH  BEACON PROBE DATA HS  ESSID\n");
     for (index = 0; index < MAX_APS; index++) {
         struct ap_info *ap = &aps[index];
@@ -1037,12 +1163,13 @@ static int run_dump(unsigned int target_frames)
     load_handshake_index();
     rewrite_index();
     rewrite_network_index();
+    rewrite_client_index();
 
     write_text("AIRODUMP_START interface=wlan0 frames=");
     write_dec(target_frames);
     if (target_frames == 0)
         write_text(" forever");
-    write_text(" store=/tmp/airhs max_handshakes=");
+    write_text(" store=/tmp/airhs clients=/tmp/airscan-clients.txt max_handshakes=");
     write_dec(MAX_HANDSHAKES);
     write_text(" mode=");
     if (filter_has_bssid) {
@@ -1082,6 +1209,7 @@ static int run_dump(unsigned int target_frames)
 static void usage(void)
 {
     write_text("Usage: airodump [frames] [all|bssid <mac>] [channel <n>]\n");
+    write_text("Writes network/client indexes to /tmp/airscan-*.txt\n");
     write_text("frames=0 runs forever. Interface is fixed to wlan0 monitor/radiotap.\n");
     write_text("Handshake store: /tmp/airhs, one latest PCAP per BSSID, oldest evicted after max.\n");
 }
