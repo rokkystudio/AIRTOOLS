@@ -81,6 +81,8 @@ struct client_info {
 
 static struct ap_info aps[MAX_APS];
 static struct client_info clients[MAX_CLIENTS];
+
+static void rewrite_client_index(void);
 static u32 total_frames;
 static u32 mgmt_frames;
 static u32 ctrl_frames;
@@ -742,13 +744,15 @@ static struct client_info *find_client(const u8 *bssid, const u8 *station)
 static void record_client(const u8 *bssid, const u8 *station, int has_signal, int signal_dbm)
 {
     struct client_info *client;
-    if (!bssid || !station || is_broadcast(station) || is_multicast(station))
+    int new_client = 0;
+    if (!bssid || !station || is_broadcast(station) || is_multicast(station) || mac_equal(bssid, station))
         return;
     client = find_client(bssid, station);
     if (!client)
         return;
     if (!client->used) {
         client->used = 1;
+        new_client = 1;
         copy_mac(client->bssid, bssid);
         copy_mac(client->station, station);
     }
@@ -758,7 +762,11 @@ static void record_client(const u8 *bssid, const u8 *station, int has_signal, in
         client->has_signal = 1;
         client->signal_dbm = signal_dbm;
     }
+    if (new_client || (client->frames & 0x0fU) == 0)
+        rewrite_client_index();
 }
+
+
 
 static void rewrite_client_index(void)
 {
@@ -916,6 +924,7 @@ static void handle_mgmt(const u8 *body, unsigned int length, u8 subtype, int has
         ap->has_signal = 1;
         ap->signal_dbm = signal_dbm;
     }
+
     if (subtype == 8 || subtype == 5) {
         if (subtype == 8)
             ap->beacons++;

@@ -459,7 +459,7 @@ static int spawn_airodump(void)
             argv[argc++] = channel_text;
         }
         argv[argc] = 0;
-        exec_path_pair("/bin/airodump", "/tmp/airodump", argv);
+        exec_path_pair("/tmp/airodump", "/bin/airodump", argv);
     }
     airodump_pid = pid;
     return 0;
@@ -553,7 +553,7 @@ static int start_discovery_scan(void)
         argv[1] = (char *)"0";
         argv[2] = (char *)"all";
         argv[3] = 0;
-        exec_path_pair("/bin/airodump", "/tmp/airodump", argv);
+        exec_path_pair("/tmp/airodump", "/bin/airodump", argv);
     }
     airodump_pid = pid;
 
@@ -581,7 +581,7 @@ static int run_aireplay_argv(char *const argv[])
         return 32;
     if (pid == 0) {
         child_redirect_devnull();
-        exec_path_pair("/bin/aireplay", "/tmp/aireplay", argv);
+        exec_path_pair("/tmp/aireplay", "/bin/aireplay", argv);
     }
     sys_waitpid(pid, 0, 0);
     return 0;
@@ -702,7 +702,7 @@ static int spawn_airwifi_apply(const char *ssid, const char *pass)
         argv[2] = (char *)ssid;
         argv[3] = (char *)pass;
         argv[4] = 0;
-        exec_path_pair("/bin/airwifi", "/tmp/airwifi", argv);
+        exec_path_pair("/tmp/airwifi", "/bin/airwifi", argv);
     }
     return 0;
 }
