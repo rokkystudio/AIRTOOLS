@@ -31,4 +31,9 @@ __pycache__/
 
 /.idea/workspace.xml
 /.idea/projectSettingsUpdater.xml
+/.idea/AndroidProjectSystem.xml
+/.idea/caches/deviceStreaming.xml
+/.idea/gradle.xml
+/.idea/misc.xml
+/.idea/runConfigurations.xml
 /toolchain/llvm/mingw64/bin/libLLVM-22.dll
