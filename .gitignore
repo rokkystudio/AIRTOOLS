@@ -39,3 +39,7 @@ __pycache__/
 /toolchain/llvm/mingw64/bin/libLLVM-22.dll
 /.idea/AIRTOOLS.iml
 /.idea/inspectionProfiles/Project_Default.xml
+
+# Vendored external tool sources (kept locally, not published)
+/external/rtl8188eus/
+/external/ac85p-asuswrt-tools/
