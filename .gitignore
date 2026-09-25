@@ -37,3 +37,5 @@ __pycache__/
 /.idea/misc.xml
 /.idea/runConfigurations.xml
 /toolchain/llvm/mingw64/bin/libLLVM-22.dll
+/.idea/AIRTOOLS.iml
+/.idea/inspectionProfiles/Project_Default.xml
