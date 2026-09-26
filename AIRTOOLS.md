@@ -19,7 +19,7 @@ sha256=145413bdc96f95bcfe59c814f396ee1f0f45a4d3f8c6a08e37cf44e7de59c6ef
 ```text
 dumps\modified\mtd4_base_connectivity_wn723n_autostart_airtools.bin
 size=3866624
-sha256=eceb35fa139db9c855ac41cfe426072a2e70fd11a36237565c0965d497aa4c4e
+sha256=68478e6012c3a9ddcffe680a75cf4f751a8ff0d9a0e09cc4e756893d8f5b2ce7
 ```
 
 ## Management network
@@ -51,13 +51,15 @@ Android TCP sockets привязываются к физической Wi-Fi net
 /handshakes
 /handshake/download?file=<12-hex>.pcap
 /clients
-/replay?station=<client-mac>
+/replay?station=<client-mac>&count=<1..128>
 /aireplay?mode=test&count=1
 ```
 
 Основной Android flow использует `/scan/start`, `/networks`, `/select`, `/status` и `/handshakes`. `/set`, `/start` и `/stop` остаются низкоуровневыми командами.
 
-`/select` выполняет переход режима на устройстве атомарно: сохраняет BSSID/channel, останавливает discovery hopper и discovery `airodump`, переводит `wlan0` на выбранный канал и запускает `airodump` с фильтром выбранного BSSID.
+`/select` выполняет переход режима на устройстве атомарно: сохраняет BSSID/channel, останавливает discovery hopper и discovery `airodump`, переводит `wlan0` на выбранный канал и запускает `airodump` с фильтром выбранного BSSID. Ответ `OK select capture` отправляется после readiness marker от `airodump`, который создаётся после открытия packet socket, bind к `wlan0` и инициализации capture indexes.
+
+`/replay` доступен только при активном target capture и остановленном discovery hopper. Параметр `count` принимает значения `1..128`; без параметра используется `5`. Невалидное значение возвращает ошибку.
 
 `/status` возвращает фактический runtime state:
 

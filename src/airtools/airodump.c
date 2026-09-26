@@ -35,6 +35,7 @@ extern void sys_exit(int status);
 #define HS_INDEX_PATH "/tmp/airhs/index.txt"
 #define NETWORK_INDEX_PATH "/tmp/airscan-networks.txt"
 #define CLIENT_INDEX_PATH "/tmp/airscan-clients.txt"
+#define CAPTURE_READY_PATH "/tmp/airtools.capture.ready"
 
 struct timeval32 {
     u32 seconds;
@@ -1181,6 +1182,22 @@ static void print_table(void)
     write_text("\n");
 }
 
+/* Publishes capture readiness only after the packet socket and indexes are initialized. */
+static int mark_capture_ready(void)
+{
+    static const char ready_text[] = "ready\n";
+    int fd = sys_open(CAPTURE_READY_PATH, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0)
+        return -1;
+    if (sys_write(fd, ready_text, sizeof(ready_text) - 1) != (int)(sizeof(ready_text) - 1)) {
+        sys_close(fd);
+        sys_unlink(CAPTURE_READY_PATH);
+        return -1;
+    }
+    sys_close(fd);
+    return 0;
+}
+
 static int run_dump(unsigned int target_frames)
 {
     static u8 frame[4096];
@@ -1211,6 +1228,11 @@ static int run_dump(unsigned int target_frames)
     rewrite_index();
     rewrite_network_index();
     rewrite_client_index();
+    if (mark_capture_ready() != 0) {
+        write_text("READY_ERROR\n");
+        sys_close(fd);
+        return 14;
+    }
 
     write_text("AIRODUMP_START interface=wlan0 frames=");
     write_dec(target_frames);
@@ -1235,6 +1257,7 @@ static int run_dump(unsigned int target_frames)
         int length = sys_recv(fd, frame, sizeof(frame), 0);
         if (length < 0) {
             write_text("RECV_ERROR\n");
+            sys_unlink(CAPTURE_READY_PATH);
             sys_close(fd);
             return 13;
         }
@@ -1247,6 +1270,7 @@ static int run_dump(unsigned int target_frames)
             next_print += 256;
         }
     }
+    sys_unlink(CAPTURE_READY_PATH);
     sys_close(fd);
     print_table();
     write_text("AIRODUMP_OK\n");

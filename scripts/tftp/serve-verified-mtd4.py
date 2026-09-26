@@ -1,12 +1,29 @@
+"""Serves one explicitly selected mtd4 image over read-only TFTP."""
+
 from pathlib import Path
+import argparse
 import socket
 import struct
 import hashlib
 
-FILE = Path(r'D:\\PROJECTS\\AIRTOOLS\\dumps\\verified\\mtd4_airtools_clients_replay_20260923.bin')
+DEFAULT_FILE = Path(r'D:\\PROJECTS\\AIRTOOLS\\dumps\\modified\\mtd4_base_connectivity_wn723n_autostart_airtools.bin')
+MTD4_SIZE = 0x3B0000
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--image', type=Path, default=DEFAULT_FILE)
+parser.add_argument('--sha256', default='')
+args = parser.parse_args()
+
+FILE = args.image.resolve()
 DATA = FILE.read_bytes()
+DIGEST = hashlib.sha256(DATA).hexdigest()
+if len(DATA) != MTD4_SIZE:
+    raise SystemExit(f'Invalid mtd4 size: {len(DATA)} != {MTD4_SIZE}')
+if args.sha256 and DIGEST.lower() != args.sha256.lower():
+    raise SystemExit(f'SHA-256 mismatch: {DIGEST} != {args.sha256}')
+
 NAMES = {b'mtd4_wn723n.bin', b'/mtd4_wn723n.bin', b'mtd4_connectivity.bin', b'/mtd4_connectivity.bin'}
-print('TFTP_FILE', FILE, len(DATA), hashlib.sha256(DATA).hexdigest(), flush=True)
+print('TFTP_FILE', FILE, len(DATA), DIGEST, flush=True)
 print('TFTP_NAMES', ','.join(name.decode('ascii', 'replace') for name in sorted(NAMES)), flush=True)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

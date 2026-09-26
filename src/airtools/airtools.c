@@ -31,6 +31,7 @@ extern void sys_exit(int status);
 #define SO_REUSEADDR 4
 #define AIRTOOLS_PORT 8088
 #define SIGTERM 15
+#define WNOHANG 1
 
 #define O_RDONLY 0x0000
 #define O_WRONLY 0x0001
@@ -38,6 +39,7 @@ extern void sys_exit(int status);
 #define O_TRUNC  0x0200
 
 #define STATE_PATH "/tmp/airtools.state"
+#define CAPTURE_READY_PATH "/tmp/airtools.capture.ready"
 #define AIRHS_INDEX "/tmp/airhs/index.txt"
 #define AIRSCAN_INDEX "/tmp/airscan-networks.txt"
 #define AIRCLIENT_INDEX "/tmp/airscan-clients.txt"
@@ -410,12 +412,60 @@ static void exec_path_pair(const char *first, const char *second, char *const ar
     sys_exit(127);
 }
 
+/* Returns nonzero only after airodump has opened and initialized its capture socket. */
+static int capture_ready_file_exists(void)
+{
+    int fd = sys_open(CAPTURE_READY_PATH, O_RDONLY, 0);
+    if (fd < 0)
+        return 0;
+    sys_close(fd);
+    return 1;
+}
+
+/* Reaps a finished airodump child and reports whether the tracked child is still running. */
+static int refresh_airodump_state(void)
+{
+    int wait_status = 0;
+    int result;
+
+    if (airodump_pid <= 0)
+        return 0;
+
+    result = sys_waitpid(airodump_pid, &wait_status, WNOHANG);
+    if (result == 0)
+        return 1;
+
+    airodump_pid = 0;
+    sys_unlink(CAPTURE_READY_PATH);
+    return 0;
+}
+
+/* Waits for the explicit readiness marker written by airodump after socket setup. */
+static int wait_for_airodump_ready(void)
+{
+    unsigned int attempt;
+
+    for (attempt = 0; attempt < 200; attempt++) {
+        u32 request[2];
+        if (capture_ready_file_exists())
+            return 0;
+        if (!refresh_airodump_state())
+            return -1;
+        request[0] = 0;
+        request[1] = 10000000U;
+        sys_nanosleep(request, 0);
+    }
+
+    return -1;
+}
+
 static int spawn_airodump(void)
 {
     int pid;
     char *argv[8];
     unsigned int argc = 0;
 
+    sys_unlink(CAPTURE_READY_PATH);
     if (airodump_pid > 0) {
         sys_kill(airodump_pid, SIGTERM);
         sys_waitpid(airodump_pid, 0, 0);
@@ -462,16 +512,26 @@ static int spawn_airodump(void)
         exec_path_pair("/tmp/airodump", "/bin/airodump", argv);
     }
     airodump_pid = pid;
+    if (wait_for_airodump_ready() != 0) {
+        if (airodump_pid > 0) {
+            sys_kill(airodump_pid, SIGTERM);
+            sys_waitpid(airodump_pid, 0, 0);
+            airodump_pid = 0;
+        }
+        sys_unlink(CAPTURE_READY_PATH);
+        return -1;
+    }
     return 0;
 }
 
 static int stop_airodump(void)
 {
-    if (airodump_pid <= 0)
-        return 0;
-    sys_kill(airodump_pid, SIGTERM);
-    sys_waitpid(airodump_pid, 0, 0);
-    airodump_pid = 0;
+    if (airodump_pid > 0) {
+        sys_kill(airodump_pid, SIGTERM);
+        sys_waitpid(airodump_pid, 0, 0);
+        airodump_pid = 0;
+    }
+    sys_unlink(CAPTURE_READY_PATH);
     return 0;
 }
 
@@ -627,21 +687,31 @@ static int spawn_aireplay_from_path(const char *path)
     return 0;
 }
 
-/* Runs REPLAY as aireplay -0 5 against the current capture BSSID and optional station. */
+/* Runs REPLAY as aireplay -0 <count> against the current capture BSSID and optional station. */
 static int spawn_replay_from_capture(const char *path)
 {
     char *argv[6];
     unsigned int argc = 0;
+    unsigned int replay_count = 5;
     char station_text_local[18];
-    if (current_state.mode != 1) {
-        response_append("ERR replay requires capture\n");
+    if (current_state.mode != 1 || scan_hopper_pid > 0 || !refresh_airodump_state() || !capture_ready_file_exists()) {
+        response_append("ERR replay requires active capture\n");
         return 33;
+    }
+
+    if (get_query_value(path, "count", count_text, sizeof(count_text))) {
+        if (parse_uint(count_text, &replay_count) != 0 || replay_count < 1 || replay_count > 128) {
+            response_append("ERR replay invalid count\n");
+            return 35;
+        }
+    } else {
+        copy_string(count_text, sizeof(count_text), "5");
     }
 
     mac_to_text(bssid_text, current_state.bssid);
     argv[argc++] = (char *)"aireplay";
     argv[argc++] = (char *)"-0";
-    argv[argc++] = (char *)"5";
+    argv[argc++] = count_text;
     argv[argc++] = bssid_text;
     if (get_query_value(path, "station", station_text_local, sizeof(station_text_local))) {
         u8 station[6];
@@ -655,7 +725,9 @@ static int spawn_replay_from_capture(const char *path)
 
     if (run_aireplay_argv(argv) != 0)
         return 32;
-    response_append("OK replay deauth count=5 bssid=");
+    response_append("OK replay deauth count=");
+    response_append(count_text);
+    response_append(" bssid=");
     response_append(bssid_text);
     if (argc > 4) {
         response_append(" station=");
