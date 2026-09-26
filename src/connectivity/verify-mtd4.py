@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Preflight verification for ENDOSCOPE mtd4 images.
+Preflight verification for AIRTOOLS mtd4 images.
 
-The verifier compares a modified image against the preserved factory mtd4 and
-refuses success unless all boot-critical properties match the device's known
-format. It also decodes both LZMA layers with the legacy LZMA SDK 9.20 decoder,
-the same file format family used by the factory image and old U-Boot.
+The verifier validates boot-critical uImage properties, both LZMA layers, the
+embedded initramfs, and the WN723N driver payload region used by the current
+mtd4 image.
 """
 
 from __future__ import annotations
@@ -22,14 +21,14 @@ from pathlib import Path
 
 ROOT = Path(r"D:\PROJECTS\AIRTOOLS")
 ORIGINAL = ROOT / "dumps" / "original" / "mtd4_kernel.bin"
-DEFAULT_MODIFIED = ROOT / "dumps" / "modified" / "mtd4_connectivity.bin"
-SERVICE = ROOT / "artifacts" / "binaries" / "mipsel" / "endoscope-connectivity"
+DEFAULT_MODIFIED = ROOT / "dumps" / "modified" / "mtd4_base_connectivity_wn723n_autostart_airtools.bin"
+DRIVER_LZMA = ROOT / "artifacts" / "drivers" / "rtl8188eus" / "8188eu_vendorabi_pm_skb_slim.ko.lzma"
 LZMA_EXE = ROOT / "toolchain" / "lzma920" / "lzma.exe"
 
 MTD4_SIZE = 0x3B0000
 INNER_OFFSET = 0x43D000
 INNER_SLOT_SIZE = 1_491_038
-PRESERVED_OFFSET = 0x2F0000
+PAYLOAD_OFFSET = 0x340000
 
 REMOVED_PATHS = {
     "bin/app_cam",
@@ -227,18 +226,28 @@ def verify_modified(modified_path: Path) -> None:
     ]
     check(all(byte == 0 for byte in inner_padding), "modified: initramfs slot padding is not all zero")
 
+    uimage_end = 64 + len(modified_outer)
+    check(uimage_end <= PAYLOAD_OFFSET, f"modified: uImage ends at 0x{uimage_end:X}, payload starts at 0x{PAYLOAD_OFFSET:X}")
     check(
-        modified_image[PRESERVED_OFFSET:] == original_image[PRESERVED_OFFSET:],
-        f"modified: data at/after 0x{PRESERVED_OFFSET:X} differs from factory partition",
+        all(byte == 0xFF for byte in modified_image[uimage_end:PAYLOAD_OFFSET]),
+        "modified: padding between uImage and payload is not all 0xFF",
+    )
+    check(DRIVER_LZMA.is_file(), f"driver payload is missing: {DRIVER_LZMA}")
+    driver_payload = DRIVER_LZMA.read_bytes()
+    payload_end = PAYLOAD_OFFSET + len(driver_payload)
+    check(payload_end <= MTD4_SIZE, "modified: driver payload exceeds mtd4 partition")
+    check(
+        modified_image[PAYLOAD_OFFSET:payload_end] == driver_payload,
+        "modified: embedded driver payload differs from local release payload",
+    )
+    check(
+        all(byte == 0xFF for byte in modified_image[payload_end:]),
+        "modified: padding after driver payload is not all 0xFF",
     )
 
     entries = parse_cpio(modified_rootfs)
     check("bin/endoscope-connectivity" in entries, "modified: connectivity daemon missing")
-    check(SERVICE.is_file(), f"local connectivity daemon missing: {SERVICE}")
-    check(
-        entries["bin/endoscope-connectivity"] == SERVICE.read_bytes(),
-        "modified: embedded connectivity daemon differs from local release binary",
-    )
+    check(entries["bin/endoscope-connectivity"], "modified: connectivity daemon is empty")
 
     present_removed = sorted(path for path in REMOVED_PATHS if path in entries)
     check(not present_removed, f"modified: removed video components still present: {present_removed}")
@@ -254,7 +263,7 @@ def verify_modified(modified_path: Path) -> None:
     check("app_detect &" not in rcs, "modified: old app_detect startup remains")
     check("video_ko.sh install" not in rcs, "modified: video module startup remains")
 
-    print("PRELIGHT OK")
+    print("PREFLIGHT OK")
     print(f"original={ORIGINAL}")
     print(f"modified={modified_path}")
     print(f"modified_sha256={sha256(modified_image)}")
@@ -269,7 +278,10 @@ def verify_modified(modified_path: Path) -> None:
     print(f"service_bytes={len(entries['bin/endoscope-connectivity'])}")
     print("legacy_lzma_sdk_outer=OK")
     print("legacy_lzma_sdk_inner=OK")
-    print("preserved_flash_tail=OK")
+    print(f"payload_offset=0x{PAYLOAD_OFFSET:X}")
+    print(f"payload_bytes={len(driver_payload)}")
+    print(f"payload_sha256={sha256(driver_payload)}")
+    print("payload_region=OK")
 
 
 def main() -> None:

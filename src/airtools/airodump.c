@@ -66,6 +66,8 @@ struct ap_info {
     u32 hs_tick;
     u32 hs_epoch;
     u32 hs_generation;
+    u8 has_management_frame;
+    struct stored_frame management_frame;
     struct stored_frame hs_frames[HS_FRAMES];
 };
 
@@ -450,22 +452,44 @@ static void set_ssid(struct ap_info *ap, const u8 *ssid, unsigned int length)
     ap->ssid[length] = 0;
 }
 
-static void parse_tags(struct ap_info *ap, const u8 *tags, unsigned int length)
+static int parse_tags(struct ap_info *ap, const u8 *tags, unsigned int length)
 {
     unsigned int offset = 0;
+    int has_nonempty_ssid = 0;
+
     while (offset + 2 <= length) {
         u8 id = tags[offset];
         u8 tag_length = tags[offset + 1];
         const u8 *value = tags + offset + 2;
         offset += 2;
         if (offset + tag_length > length)
-            return;
-        if (id == 0)
-            set_ssid(ap, value, tag_length);
-        else if (id == 3 && tag_length >= 1 && ap)
+            return 0;
+        if (id == 0) {
+            if (tag_length) {
+                set_ssid(ap, value, tag_length);
+                has_nonempty_ssid = 1;
+            }
+        } else if (id == 3 && tag_length >= 1 && ap) {
             ap->channel = value[0];
+        }
         offset += tag_length;
     }
+
+    return has_nonempty_ssid;
+}
+
+static void store_management_frame(struct ap_info *ap, const u8 *frame, unsigned int frame_length)
+{
+    unsigned int capture_length = frame_length;
+
+    if (!ap || !frame || !ap->ssid_len || frame_length == 0)
+        return;
+    if (capture_length > HS_CAPTURE_BYTES)
+        capture_length = HS_CAPTURE_BYTES;
+
+    ap->management_frame.length = (u16)capture_length;
+    copy_bytes(ap->management_frame.data, frame, capture_length);
+    ap->has_management_frame = 1;
 }
 
 static void evict_oldest_if_needed(struct ap_info *current)
@@ -809,7 +833,8 @@ static void save_handshake(struct ap_info *ap)
     u32 captured_epoch;
     u32 stored_tick;
 
-    if (!ap || ap->hs_frame_count < 2)
+    if (!ap || ap->hs_frame_count < 2 || !ap->has_mic || !ap->has_ack ||
+        !ap->has_management_frame || !ap->ssid_len)
         return;
 
     sys_mkdir(HS_STORE_DIR, 0755);
@@ -833,6 +858,12 @@ static void save_handshake(struct ap_info *ap)
     write_u32_le(fd, 0);
     write_u32_le(fd, 65535U);
     write_u32_le(fd, 127U);
+
+    write_u32_le(fd, captured_epoch ? captured_epoch : stored_tick);
+    write_u32_le(fd, 0);
+    write_u32_le(fd, ap->management_frame.length);
+    write_u32_le(fd, ap->management_frame.length);
+    sys_write(fd, ap->management_frame.data, ap->management_frame.length);
 
     for (index = 0; index < ap->hs_frame_count; index++) {
         struct stored_frame *stored = &ap->hs_frames[index];
@@ -906,10 +937,12 @@ static void record_eapol(struct ap_info *ap, const u8 *frame, unsigned int frame
         save_handshake(ap);
 }
 
-static void handle_mgmt(const u8 *body, unsigned int length, u8 subtype, int has_signal, int signal_dbm)
+static void handle_mgmt(const u8 *frame, unsigned int frame_length, const u8 *body, unsigned int length,
+                        u8 subtype, int has_signal, int signal_dbm)
 {
     struct ap_info *ap;
     const u8 *bssid;
+    int current_frame_has_ssid = 0;
     if (length < 24) {
         short_frames++;
         return;
@@ -931,7 +964,12 @@ static void handle_mgmt(const u8 *body, unsigned int length, u8 subtype, int has
         else
             ap->probes++;
         if (length > 36)
-            parse_tags(ap, body + 36, length - 36);
+            current_frame_has_ssid = parse_tags(ap, body + 36, length - 36);
+        if (current_frame_has_ssid) {
+            store_management_frame(ap, frame, frame_length);
+            if (!ap->hs_saved && ap->hs_frame_count >= 2 && ap->has_mic && ap->has_ack)
+                save_handshake(ap);
+        }
     }
 }
 
@@ -1084,7 +1122,7 @@ static void handle_frame(const u8 *frame, unsigned int length)
     subtype = (frame_control >> 4) & 0x0f;
     if (type == 0) {
         mgmt_frames++;
-        handle_mgmt(body, body_length, subtype, has_signal, signal_dbm);
+        handle_mgmt(frame, length, body, body_length, subtype, has_signal, signal_dbm);
     } else if (type == 1) {
         ctrl_frames++;
     } else if (type == 2) {

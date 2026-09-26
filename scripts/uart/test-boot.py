@@ -13,8 +13,8 @@ No SPI flash write command is issued by this script.
 For recovery, boot the preserved factory image from RAM first:
   python scripts\\uart\\test-boot.py --image dumps\\original\\mtd4_kernel.bin --boot
 
-For testing a modified image before flashing:
-  python scripts\\uart\\test-boot.py --image dumps\\modified\\mtd4_connectivity.bin --boot
+For testing the current AIRTOOLS image before flashing:
+  python scripts\\uart\\test-boot.py --image dumps\\modified\\mtd4_base_connectivity_wn723n_autostart_airtools.bin --boot
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ import serial
 
 ROOT = Path(r"D:\PROJECTS\AIRTOOLS")
 ORIGINAL = ROOT / "dumps" / "original" / "mtd4_kernel.bin"
-MODIFIED = ROOT / "dumps" / "modified" / "mtd4_connectivity.bin"
+MODIFIED = ROOT / "dumps" / "modified" / "mtd4_base_connectivity_wn723n_autostart_airtools.bin"
 VERIFY_SCRIPT = ROOT / "src" / "connectivity" / "verify-mtd4.py"
 RECOVERY_SCRIPT = ROOT / "scripts" / "uart" / "recover.py"
 

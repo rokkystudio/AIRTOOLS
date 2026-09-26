@@ -14,12 +14,12 @@ sha256=145413bdc96f95bcfe59c814f396ee1f0f45a4d3f8c6a08e37cf44e7de59c6ef
 
 Проверено на реальном устройстве: boot, management AP, TCP/8088, автоматический discovery scan, channel hopping 1..13, RSSI из radiotap, сортировка Android по уровню сигнала, атомарный переход scan -> capture, фильтрация capture по BSSID/channel, возврат capture -> scan и восстановление экрана Android по `/status` после перезапуска приложения.
 
-Текущий build output совпадает с проверенным образом:
+Текущий build output после исходных изменений собирается отдельно от физически проверенного образа и требует проверки на устройстве перед переносом в `dumps\verified`:
 
 ```text
 dumps\modified\mtd4_base_connectivity_wn723n_autostart_airtools.bin
 size=3866624
-sha256=145413bdc96f95bcfe59c814f396ee1f0f45a4d3f8c6a08e37cf44e7de59c6ef
+sha256=eceb35fa139db9c855ac41cfe426072a2e70fd11a36237565c0965d497aa4c4e
 ```
 
 ## Management network
@@ -112,7 +112,7 @@ Handshake storage:
 /tmp/airhs/index.txt
 ```
 
-Один BSSID хранит один последний handshake PCAP. Новый handshake заменяет предыдущий для того же BSSID. `/handshakes` возвращает index; Android сохраняет самый новый `stored_tick` для BSSID и добавляет время захвата. Если firmware отдаёт валидный `captured_epoch`, используется он; если системные часы устройства недостоверны, Android фиксирует момент первого появления нового `stored_tick`.
+Один BSSID хранит один последний handshake PCAP. Файл содержит реальный Beacon или Probe Response с ненулевым ESSID перед сохранёнными EAPOL-Key кадрами; handshake не публикуется в index, пока такой management frame не получен. Поэтому PCAP сам содержит ESSID/RSN metadata, необходимую анализаторам и конвертации в hc22000, без восстановления SSID по имени файла или Android metadata. Новый handshake заменяет предыдущий для того же BSSID. `/handshakes` возвращает index; Android сохраняет самый новый `stored_tick` для BSSID и добавляет время захвата. Если firmware отдаёт валидный `captured_epoch`, используется он; если системные часы устройства недостоверны, Android фиксирует момент первого появления нового `stored_tick`.
 
 `airodump` при старте восстанавливает существующий `/tmp/airhs/index.txt`, поэтому перезапуск capture больше не очищает список при наличии PCAP-файлов в RAM.
 
