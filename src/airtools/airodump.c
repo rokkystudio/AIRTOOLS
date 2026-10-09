@@ -33,6 +33,12 @@ extern void sys_exit(int status);
 #define HS_CAPTURE_BYTES 768
 #define HS_STORE_DIR "/tmp/airhs"
 #define HS_INDEX_PATH "/tmp/airhs/index.txt"
+#define EAPOL_KEY_INFO_PAIRWISE 0x0008
+#define EAPOL_KEY_INFO_ACK 0x0080
+#define EAPOL_KEY_INFO_MIC 0x0100
+#define EAPOL_KEY_INFO_SECURE 0x0200
+#define EAPOL_REPLAY_COUNTER_OFFSET 9
+#define EAPOL_REPLAY_COUNTER_BYTES 8
 #define NETWORK_INDEX_PATH "/tmp/airscan-networks.txt"
 #define CLIENT_INDEX_PATH "/tmp/airscan-clients.txt"
 #define CAPTURE_READY_PATH "/tmp/airtools.capture.ready"
@@ -61,6 +67,16 @@ struct ap_info {
     u8 has_eapol;
     u8 has_mic;
     u8 has_ack;
+    u8 has_m1;
+    u8 has_m2;
+    u8 hs_has_replay;
+    u8 m1_station[6];
+    u8 m2_station[6];
+    u8 m1_replay[EAPOL_REPLAY_COUNTER_BYTES];
+    u8 m2_replay[EAPOL_REPLAY_COUNTER_BYTES];
+    u8 hs_replay[EAPOL_REPLAY_COUNTER_BYTES];
+    struct stored_frame m1_frame;
+    struct stored_frame m2_frame;
     u8 hs_saved;
     u8 hs_frame_count;
     u8 hs_file[32];
@@ -172,14 +188,19 @@ static void copy_stored_frame(struct stored_frame *destination, const struct sto
     copy_bytes(destination->data, source->data, source->length);
 }
 
-static int mac_equal(const u8 *left, const u8 *right)
+static int bytes_equal(const u8 *left, const u8 *right, unsigned int length)
 {
     unsigned int index;
-    for (index = 0; index < 6; index++) {
+    for (index = 0; index < length; index++) {
         if (left[index] != right[index])
             return 0;
     }
     return 1;
+}
+
+static int mac_equal(const u8 *left, const u8 *right)
+{
+    return bytes_equal(left, right, 6);
 }
 
 static int is_broadcast(const u8 *mac)
@@ -834,8 +855,8 @@ static void save_handshake(struct ap_info *ap)
     u32 captured_epoch;
     u32 stored_tick;
 
-    if (!ap || ap->hs_frame_count < 2 || !ap->has_mic || !ap->has_ack ||
-        !ap->has_management_frame || !ap->ssid_len)
+    if (!ap || ap->hs_frame_count < 2 || !ap->has_m1 || !ap->has_m2 ||
+        !ap->hs_has_replay || !ap->has_management_frame || !ap->ssid_len)
         return;
 
     sys_mkdir(HS_STORE_DIR, 0755);
@@ -902,40 +923,70 @@ static void save_handshake(struct ap_info *ap)
     write_text("\n");
 }
 
-static void record_eapol(struct ap_info *ap, const u8 *frame, unsigned int frame_length, const u8 *eapol, unsigned int eapol_length)
+/* Records EAPOL-Key frames and saves a handshake only when an exact M1+M2 pair for one client replay counter is available. */
+static void record_eapol(struct ap_info *ap, const u8 *station, const u8 *frame, unsigned int frame_length, const u8 *eapol, unsigned int eapol_length)
 {
     u16 key_info = 0;
-    unsigned int slot;
     unsigned int capture_length = frame_length;
+    const u8 *replay_counter;
+    int is_m1;
+    int is_m2;
 
-    if (!ap || eapol_length < 8)
+    if (!ap || !station || eapol_length < EAPOL_REPLAY_COUNTER_OFFSET + EAPOL_REPLAY_COUNTER_BYTES)
         return;
     if (eapol[1] != 3)
         return;
 
     key_info = ((u16)eapol[5] << 8) | eapol[6];
     ap->has_eapol = 1;
-    if (key_info & 0x0100)
+    if (key_info & EAPOL_KEY_INFO_MIC)
         ap->has_mic = 1;
-    if (key_info & 0x0080)
+    if (key_info & EAPOL_KEY_INFO_ACK)
         ap->has_ack = 1;
+    if (!(key_info & EAPOL_KEY_INFO_PAIRWISE))
+        return;
+
+    replay_counter = eapol + EAPOL_REPLAY_COUNTER_OFFSET;
+    is_m1 = (key_info & EAPOL_KEY_INFO_ACK) && !(key_info & EAPOL_KEY_INFO_MIC);
+    is_m2 = !(key_info & EAPOL_KEY_INFO_ACK) && (key_info & EAPOL_KEY_INFO_MIC) && !(key_info & EAPOL_KEY_INFO_SECURE);
+
+    if (!is_m1 && !is_m2)
+        return;
 
     if (capture_length > HS_CAPTURE_BYTES)
         capture_length = HS_CAPTURE_BYTES;
 
-    if (ap->hs_frame_count < HS_FRAMES) {
-        slot = ap->hs_frame_count++;
-    } else {
-        for (slot = 1; slot < HS_FRAMES; slot++)
-            copy_stored_frame(&ap->hs_frames[slot - 1], &ap->hs_frames[slot]);
-        slot = HS_FRAMES - 1;
+    if (is_m1) {
+        ap->has_m1 = 1;
+        copy_mac(ap->m1_station, station);
+        copy_bytes(ap->m1_replay, replay_counter, EAPOL_REPLAY_COUNTER_BYTES);
+        ap->m1_frame.length = (u16)capture_length;
+        copy_bytes(ap->m1_frame.data, frame, capture_length);
     }
 
-    ap->hs_frames[slot].length = (u16)capture_length;
-    copy_bytes(ap->hs_frames[slot].data, frame, capture_length);
+    if (is_m2) {
+        ap->has_m2 = 1;
+        copy_mac(ap->m2_station, station);
+        copy_bytes(ap->m2_replay, replay_counter, EAPOL_REPLAY_COUNTER_BYTES);
+        ap->m2_frame.length = (u16)capture_length;
+        copy_bytes(ap->m2_frame.data, frame, capture_length);
+    }
 
-    if (ap->hs_frame_count >= 2 && ap->has_mic && ap->has_ack)
-        save_handshake(ap);
+    if (!ap->has_m1 || !ap->has_m2)
+        return;
+    if (!mac_equal(ap->m1_station, ap->m2_station))
+        return;
+    if (!bytes_equal(ap->m1_replay, ap->m2_replay, EAPOL_REPLAY_COUNTER_BYTES))
+        return;
+    if (ap->hs_saved && ap->hs_has_replay && bytes_equal(ap->hs_replay, ap->m1_replay, EAPOL_REPLAY_COUNTER_BYTES))
+        return;
+
+    ap->hs_frame_count = 2;
+    copy_stored_frame(&ap->hs_frames[0], &ap->m1_frame);
+    copy_stored_frame(&ap->hs_frames[1], &ap->m2_frame);
+    ap->hs_has_replay = 1;
+    copy_bytes(ap->hs_replay, ap->m1_replay, EAPOL_REPLAY_COUNTER_BYTES);
+    save_handshake(ap);
 }
 
 static void handle_mgmt(const u8 *frame, unsigned int frame_length, const u8 *body, unsigned int length,
@@ -968,7 +1019,7 @@ static void handle_mgmt(const u8 *frame, unsigned int frame_length, const u8 *bo
             current_frame_has_ssid = parse_tags(ap, body + 36, length - 36);
         if (current_frame_has_ssid) {
             store_management_frame(ap, frame, frame_length);
-            if (!ap->hs_saved && ap->hs_frame_count >= 2 && ap->has_mic && ap->has_ack)
+            if (!ap->hs_saved && ap->hs_frame_count >= 2 && ap->has_m1 && ap->has_m2 && ap->hs_has_replay)
                 save_handshake(ap);
         }
     }
@@ -1051,7 +1102,7 @@ static void handle_data
     payload_length = length - header_length;
     if (payload[0] == 0xaa && payload[1] == 0xaa && payload[2] == 0x03 && payload[3] == 0x00 &&
         payload[4] == 0x00 && payload[5] == 0x00 && payload[6] == 0x88 && payload[7] == 0x8e) {
-        record_eapol(ap, frame, frame_length, payload + 8, payload_length - 8);
+        record_eapol(ap, station, frame, frame_length, payload + 8, payload_length - 8);
     }
 }
 
