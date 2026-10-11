@@ -30,6 +30,7 @@ extern void sys_exit(int status);
 #define SOL_SOCKET 0xffff
 #define SO_REUSEADDR 4
 #define AIRTOOLS_PORT 8088
+#define AIRTOOLS_VERSION "1.2"
 #define SIGTERM 15
 #define WNOHANG 1
 
@@ -692,20 +693,20 @@ static int spawn_replay_from_capture(const char *path)
 {
     char *argv[6];
     unsigned int argc = 0;
-    unsigned int replay_count = 5;
+    unsigned int replay_count;
     char station_text_local[18];
     if (current_state.mode != 1 || scan_hopper_pid > 0 || !refresh_airodump_state() || !capture_ready_file_exists()) {
         response_append("ERR replay requires active capture\n");
         return 33;
     }
 
-    if (get_query_value(path, "count", count_text, sizeof(count_text))) {
-        if (parse_uint(count_text, &replay_count) != 0 || replay_count < 1 || replay_count > 128) {
-            response_append("ERR replay invalid count\n");
-            return 35;
-        }
-    } else {
-        copy_string(count_text, sizeof(count_text), "5");
+    if (!get_query_value(path, "count", count_text, sizeof(count_text))) {
+        response_append("ERR replay missing count\n");
+        return 35;
+    }
+    if (parse_uint(count_text, &replay_count) != 0 || replay_count < 1 || replay_count > 128) {
+        response_append("ERR replay invalid count\n");
+        return 35;
     }
 
     mac_to_text(bssid_text, current_state.bssid);
@@ -876,7 +877,7 @@ static void refresh_children(void)
 static void append_status(void)
 {
     refresh_children();
-    response_append("OK airtools=1 mode=");
+    response_append("OK airtools=1 version=" AIRTOOLS_VERSION " mode=");
     if (scan_hopper_pid > 0 && airodump_pid > 0)
         response_append("scan");
     else if (airodump_pid > 0 && current_state.mode == 1)
